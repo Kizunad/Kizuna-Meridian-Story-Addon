@@ -17,7 +17,7 @@ import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 /** 从原版收件与文字命中区域找到最新邀请的第一项，以普通左键选中。 */
-final class ChatChoices {
+public final class ChatChoices {
     private static final Identifier ACTION = Identifier.parse("meridian_story:dialogue");
     private static final int CHAT_LEFT_SAMPLE = 8;
     private static final int SAMPLE_STEP = 3;
@@ -26,7 +26,7 @@ final class ChatChoices {
     private int y;
     private final List<Component> messages = new ArrayList<>();
 
-    void listen() {
+    public void listen() {
         ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
             if (!overlay) {
                 messages.add(message);
@@ -39,11 +39,11 @@ final class ChatChoices {
         });
     }
 
-    boolean received(Component expected) {
+    public boolean received(Component expected) {
         return messages.contains(expected);
     }
 
-    boolean locate(Minecraft client) {
+    public boolean locate(Minecraft client) {
         if (first == null) {
             return false;
         }
@@ -76,7 +76,7 @@ final class ChatChoices {
         callback.invoke(window, x * scale, y * scale);
     }
 
-    void click(Minecraft client) {
+    public void click(Minecraft client) {
         var button = new MouseButtonInfo(GLFW.GLFW_MOUSE_BUTTON_LEFT, 0);
         var event = new MouseButtonEvent(x, y, button);
         if (!(client.gui.screen() instanceof ChatScreen screen)

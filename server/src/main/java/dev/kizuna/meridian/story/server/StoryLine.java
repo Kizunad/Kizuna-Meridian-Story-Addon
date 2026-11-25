@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Map;
 
 /** 路径给出线 ID。章名、交互名和结局名都是可跨重载的身份。 */
-public record StoryLine(String origin, String first, Map<String, Chapter> chapters) {
+public record StoryLine(String origin, String first, Start start, Map<String, Chapter> chapters) {
     public record Chapter(String prompt, String notice, String greeting, List<Condition> when, List<Trigger> on) {
         public boolean ready(Facts facts, LineState state) {
             return when.stream().allMatch(condition -> condition.test(facts, state));
         }
     }
+
+    public enum Start { ORIGIN, GRAVE_VISIT }
 
     public record Facts(String origin, long ticks, double heat, int realm, long opened) { }
 
@@ -23,7 +25,7 @@ public record StoryLine(String origin, String first, Map<String, Chapter> chapte
 
     public record Raid(String feud, String party) { }
 
-    public enum Place { ANYWHERE, VILLAGE_BELL }
+    public enum Place { ANYWHERE, VILLAGE_BELL, GRAVE_VISITOR }
 
     public record Recipient(String id, Place place, String beforeArrival) { }
 

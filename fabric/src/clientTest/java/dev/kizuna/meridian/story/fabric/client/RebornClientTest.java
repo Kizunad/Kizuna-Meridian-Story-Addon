@@ -11,20 +11,16 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Player;
-import org.lwjgl.glfw.GLFW;
 
 public final class RebornClientTest implements ClientModInitializer {
     private static final int TIMEOUT = 1800;
     private static final int WORLD_READY = 80;
     private static final int SETTLE = 10;
     private static final int CARD_FRAMES = 3;
-    private static final int SLOT_CENTER = 8;
     private static final double PAGE_HEIGHT = 0.25;
     private static final Path REPORT = Path.of("../clienttest-results.txt");
     private enum Stage { START, ORIGIN, CARD, SCHEDULE, NOTE, NOTE_VIEW, WIN, FALL, PAGE, PAGE_VIEW, OPEN, DIALOGUE,
@@ -216,10 +212,10 @@ public final class RebornClientTest implements ClientModInitializer {
     }
 
     private void inspect(Minecraft client, String item, String shot, Stage next) {
-        if (!(client.gui.screen() instanceof PaperInventory)) {
-            client.gui.setScreen(new PaperInventory(client.player));
+        if (!(client.gui.screen() instanceof StoryInventory)) {
+            client.gui.setScreen(new StoryInventory(client.player));
         }
-        if (client.gui.screen() instanceof PaperInventory inventory && inventory.hover(client, item)) {
+        if (client.gui.screen() instanceof StoryInventory inventory && inventory.hover(client, item)) {
             capture(client, shot, next);
         }
     }
@@ -241,33 +237,6 @@ public final class RebornClientTest implements ClientModInitializer {
                 client.execute(() -> finish(client, failed.toString()));
             }
         });
-    }
-
-    private static final class PaperInventory extends InventoryScreen {
-        PaperInventory(Player player) {
-            super(player);
-        }
-
-        boolean hover(Minecraft client, String key) {
-            var title = Component.translatable(key);
-            for (var slot : getMenu().slots) {
-                if (slot.getItem().getHoverName().equals(title)) {
-                    long handle = client.getWindow().handle();
-                    double scale = client.getWindow().getGuiScale();
-                    double x = (leftPos + slot.x + SLOT_CENTER) * scale;
-                    double y = (topPos + slot.y + 1) * scale;
-                    var callback = GLFW.glfwSetCursorPosCallback(handle, null);
-                    GLFW.glfwSetCursorPosCallback(handle, callback);
-                    if (callback == null) {
-                        GLFW.glfwSetCursorPos(handle, x, y);
-                    } else {
-                        callback.invoke(handle, x, y);
-                    }
-                    return hoveredSlot == slot;
-                }
-            }
-            return false;
-        }
     }
 
     private void finish(Minecraft client, String error) {

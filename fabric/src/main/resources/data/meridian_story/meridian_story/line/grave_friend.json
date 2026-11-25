@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "origin": "meridian_story:grave_keeper",
+  "start": "grave_visit",
+  "first": "meeting",
+  "chapters": {
+    "meeting": {
+      "prompt": "story.meridian_story.friend.scene",
+      "greeting": "story.meridian_story.friend.greeting",
+      "when": [],
+      "on": [
+        {
+          "id": "welcome",
+          "type": "talk",
+          "params": {
+            "to": "minecraft:villager",
+            "place": "grave_visitor",
+            "label": "story.meridian_story.friend.welcome"
+          },
+          "branches": {
+            "accepted": {
+              "finish": "welcomed",
+              "do": [
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.friend.thanks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "refuse",
+          "type": "talk",
+          "params": {
+            "to": "minecraft:villager",
+            "place": "grave_visitor",
+            "label": "story.meridian_story.friend.refuse"
+          },
+          "branches": {
+            "accepted": {
+              "finish": "turned_away",
+              "do": [
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.friend.hurt"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

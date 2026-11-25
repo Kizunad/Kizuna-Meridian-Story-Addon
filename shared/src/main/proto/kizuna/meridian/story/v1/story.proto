@@ -6,6 +6,7 @@ option java_outer_classname = "StoryMessages";
 message Progress {
   int32 schema = 1;
   map<string, LineState> lines = 2;
+  GraveKeeper grave = 3;
 }
 
 message LineState {
@@ -28,4 +29,16 @@ message Claim {
   double z = 6;
   bool spent = 7;
   bool awaiting_delivery = 8;
+}
+
+// 每名守墓人的剑号、开局投递和回访事实；祖冢位置由主世界单独登记。
+message GraveKeeper {
+  string sword_serial = 1;
+  int32 delivered = 2;
+  int64 last_vigil = 3;
+  bool first_swept = 4;
+  int64 last_draw = 5;
+  int32 visits = 6;
+  string lot = 7;
+  int32 last_fragment = 8;
 }

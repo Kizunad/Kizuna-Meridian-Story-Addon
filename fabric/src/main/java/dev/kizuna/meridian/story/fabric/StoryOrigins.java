@@ -26,6 +26,9 @@ public final class StoryOrigins implements OriginEntrypoint {
     @Override
     public void register(OriginRegistrar registrar) {
         // 出身卡的行数和顺序直接取自正式的人物定义。
+        registrar.talent(OriginTalentType.standing(Identifier.parse("meridian_story:inheritance"), FLAG));
+        registrar.threat(new OriginThreatType<>(Identifier.parse("meridian_story:long_absence"), FLAG));
+        registrar.threat(new OriginThreatType<>(Identifier.parse("meridian_story:grave_visitors"), FLAG));
         registrar.talent(ENDURANCE);
         registrar.talent(COUNTER);
         registrar.threat(OPENING);

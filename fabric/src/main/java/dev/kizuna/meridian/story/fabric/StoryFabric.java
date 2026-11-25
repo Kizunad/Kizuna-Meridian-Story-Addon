@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
@@ -27,25 +28,39 @@ public final class StoryFabric implements ModInitializer {
     private final Map<UUID, Map<String, String>> shown = new HashMap<>();
     private StoryStore store;
     private StoryRaids raids;
+    private GraveVisits graves;
     private StoryDialogue dialogue;
 
     @Override
     public void onInitialize() {
+        GraveSite.registerCommand();
+        GraveItems.initialize();
+        GraveMood.initialize();
         GrittedCounter.initialize();
         store = new StoryStore();
+        graves = new GraveVisits(store);
         raids = new StoryRaids(store);
         dialogue = new StoryDialogue(store);
-        StoryChat.register(dialogue);
+        var forge = new GraveForge(store);
+        StoryChat.register(dialogue, forge);
         registerResources();
         Origins.CHOSEN.register((player, origin) -> ready(player, origin.id().toString()));
         Origins.READY.register((player, origin) ->
                 ready(player, origin.map(value -> value.id().toString()).orElse("")));
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+            if (entity instanceof ServerPlayer player) {
+                graves.leave(player);
+            }
+        });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             shown.remove(handler.player.getUUID());
+            forge.leave(handler.player);
+            graves.leave(handler.player);
             store.leave(handler.player);
             dialogue.leave(handler.player);
         });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
+            server.getPlayerList().getPlayers().forEach(graves::trackPosition);
             if (server.getTickCount() % INTERVAL == 0) {
                 server.getPlayerList().getPlayers().forEach(this::tick);
             }
@@ -130,9 +145,11 @@ public final class StoryFabric implements ModInitializer {
             return;
         }
         var view = initial.get();
+        graves.tick(player, view);
         StoryLetters.deliverPending(player, store, view.progress());
         showChapters(player, view);
         if (lines.entrySet().stream().anyMatch(entry -> entry.getValue().eligible(view.facts().origin())
+                && entry.getValue().start() == StoryLine.Start.ORIGIN
                 && !view.progress().containsLines(entry.getKey()))) {
             store.change(player, current -> StoryProgress.start(current.progress(), lines, current.facts()));
             store.read(player).ifPresent(current -> raids.tick(player, current, lines));

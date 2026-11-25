@@ -205,7 +205,7 @@ afterEvaluate {
                 origin.parentFile.mkdirs()
                 origin.text = '''selection = true
 offer_count = 2
-disabled = ["meridian_humanoid:apprentice", "meridian_humanoid:disgraced", "meridian_humanoid:merchant", "meridian_humanoid:orphan", "meridian_humanoid:reborn", "meridian_story:lone_star"]
+disabled = ["meridian_humanoid:apprentice", "meridian_humanoid:disgraced", "meridian_humanoid:merchant", "meridian_humanoid:orphan", "meridian_humanoid:reborn", "meridian_story:lone_star", "meridian_story:grave_keeper"]
 '''
             }
         }

@@ -51,7 +51,8 @@ public final class StoryProgress {
     public static Progress start(Progress progress, Map<String, StoryLine> lines, StoryLine.Facts facts) {
         var updated = progress.toBuilder();
         lines.forEach((id, line) -> {
-            if (!progress.containsLines(id) && line.eligible(facts.origin())) {
+            if (line.start() == StoryLine.Start.ORIGIN && !progress.containsLines(id)
+                    && line.eligible(facts.origin())) {
                 var state = LineState.newBuilder()
                         .setStartedAt(facts.ticks())
                         .setEnteredAt(facts.ticks())

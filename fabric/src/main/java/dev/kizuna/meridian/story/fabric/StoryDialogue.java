@@ -270,6 +270,9 @@ final class StoryDialogue {
                 entry.getKey().startsWith("meridian_story|") && feud.equals(entry.getValue().getFeud()))) {
             return false;
         }
+        if (recipient.place() == StoryLine.Place.GRAVE_VISITOR) {
+            return GraveVisits.recipient(view, player, actor);
+        }
         if (recipient.place() == StoryLine.Place.ANYWHERE) {
             return true;
         }

@@ -18,20 +18,22 @@ public final class StoryChat {
     static final Identifier ACTION = Identifier.parse("meridian_story:dialogue");
     private static final int NONCE_LENGTH = 36;
     private static StoryDialogue dialogue;
+    private static GraveForge forge;
 
     private StoryChat() { }
 
-    static void register(StoryDialogue handler) {
+    static void register(StoryDialogue handler, GraveForge smith) {
         dialogue = handler;
+        forge = smith;
     }
 
     record Selection(String nonce, long revision, int option) {
-        private ClickEvent.Custom click() {
+        private ClickEvent.Custom click(Identifier action) {
             var tag = new CompoundTag();
             tag.putString("session", nonce);
             tag.putLong("revision", revision);
             tag.putInt("option", option);
-            return new ClickEvent.Custom(ACTION, Optional.of(tag));
+            return new ClickEvent.Custom(action, Optional.of(tag));
         }
 
         private static Optional<Selection> read(Optional<Tag> payload) {
@@ -48,11 +50,17 @@ public final class StoryChat {
 
     /** 只接管剧情自己的点击，身份取自当前游戏连接。 */
     public static boolean clicked(ServerPlayer player, ServerboundCustomClickActionPacket packet) {
-        if (!ACTION.equals(packet.id())) {
+        boolean forgeClick = GraveForge.ACTION.equals(packet.id());
+        if (!forgeClick && !ACTION.equals(packet.id())) {
             return false;
         }
         Component reply = Selection.read(packet.payload())
-                .flatMap(selection -> dialogue.choose(player, selection))
+                .flatMap(selection -> {
+                    if (forgeClick) {
+                        return forge.choose(player, selection);
+                    }
+                    return dialogue.choose(player, selection);
+                })
                 .orElseGet(() -> Component.translatable("screen.meridian_story.expired"));
         player.sendSystemMessage(reply.copy().withStyle(ChatFormatting.GRAY));
         return true;
@@ -65,12 +73,17 @@ public final class StoryChat {
     }
 
     static Component button(String label, Component cost, ChatFormatting color, Selection selection) {
+        return button(label, cost, color, selection, ACTION);
+    }
+
+    static Component button(String label, Component cost, ChatFormatting color, Selection selection,
+                            Identifier action) {
         return Component.literal("[")
                 .append(Component.translatable(label))
                 .append("]")
                 .withStyle(style -> style
                         .withColor(color)
-                        .withClickEvent(selection.click())
+                        .withClickEvent(selection.click(action))
                         .withHoverEvent(new HoverEvent.ShowText(cost)));
     }
 }

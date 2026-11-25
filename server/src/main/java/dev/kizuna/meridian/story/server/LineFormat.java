@@ -49,7 +49,11 @@ public final class LineFormat {
                     "前章分支不存在");
         }
         validatePaths(first, chapters);
-        return new StoryLine(origin, first, Map.copyOf(chapters));
+        var start = StoryLine.Start.ORIGIN;
+        if (json.has("start")) {
+            start = StoryLine.Start.valueOf(text(json, "start").toUpperCase(java.util.Locale.ROOT));
+        }
+        return new StoryLine(origin, first, start, Map.copyOf(chapters));
     }
 
     private static Chapter chapter(JsonObject json, Set<String> claims, List<String> references,
@@ -152,8 +156,11 @@ public final class LineFormat {
     private static Interaction interaction(String type, JsonObject params, List<String> references) {
         Place place = Place.ANYWHERE;
         if (params.has("place")) {
-            require(text(params, "place").equals("village_bell"), "未知交谈地点");
-            place = Place.VILLAGE_BELL;
+            place = switch (text(params, "place")) {
+                case "village_bell" -> Place.VILLAGE_BELL;
+                case "grave_visitor" -> Place.GRAVE_VISITOR;
+                default -> throw new IllegalArgumentException("未知交谈地点");
+            };
         }
         String beforeArrival = "";
         if (params.has("before_arrival")) {

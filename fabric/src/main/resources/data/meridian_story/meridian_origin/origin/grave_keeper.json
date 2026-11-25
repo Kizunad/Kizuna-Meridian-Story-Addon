@@ -1,0 +1,20 @@
+{
+  "weight": 10,
+  "icon": "meridian_story:grave_marker",
+  "talents": [
+    {
+      "type": "meridian_story:inheritance",
+      "params": {}
+    }
+  ],
+  "threats": [
+    {
+      "type": "meridian_story:long_absence",
+      "params": {}
+    },
+    {
+      "type": "meridian_story:grave_visitors",
+      "params": {}
+    }
+  ]
+}
