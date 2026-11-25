@@ -1,0 +1,165 @@
+schema_version: 1
+namespace: "meridian_story"
+binding_template_groups: "human:humanoid"
+
+books {
+  id: "meridian_story:yunxi"
+  display_name: "云溪剑谱"
+  held_item_rules {
+    required_item_tags: "minecraft:swords"
+    refusals { reason: "你得握住剑，才能出招。" translation_key: "technique.meridian_story.yunxi_sword_required" }
+    categories {
+      id: "swords"
+      item_tags: "minecraft:swords"
+      selection_priority: 0
+      base_damage_source: ITEM_ATTACK_DAMAGE
+      base_damage { value: 1 unit: RATIO }
+      injury_kind: CUTTING
+      shield_interaction: NO_SHIELD_BREAK
+      can_break_doors: false
+    }
+    categories {
+      id: "other_items"
+      selection_priority: 1
+      base_damage_source: FIXED_DAMAGE
+      base_damage { value: 0 unit: DAMAGE_POINT }
+      injury_kind: BLUNT
+      shield_interaction: NO_SHIELD_BREAK
+      can_break_doors: false
+    }
+    durability { multiplier { value: 1 unit: RATIO } }
+    selection_order: CATEGORY_PRIORITY
+    selection_order: DURABILITY_MULTIPLIER
+    selection_order: PREFER_MAIN_HAND
+  }
+}
+
+volumes {
+  id: "meridian_story:yunxi_upper"
+  book_id: "meridian_story:yunxi"
+  display_name: "云溪剑谱·上卷"
+  techniques { id: "meridian_story:wind_thrust" version: 1 }
+  techniques { id: "meridian_story:moon_lift" version: 1 }
+}
+
+definitions {
+  id: "meridian_story:wind_thrust"
+  version: 1
+  category: ATTACK
+  minimum_realm: WANDERING_QI
+  slots {
+    id: "sword_arm"
+    module: TISSUE
+    tags: "human:arm_muscle"
+    minimum_count: 3
+    maximum_count: 3
+    relative_arm {
+      arm: WEAPON_ARM
+      left_module_ids: "left_biceps_brachii"
+      left_module_ids: "left_triceps_brachii"
+      left_module_ids: "left_brachioradialis"
+      right_module_ids: "right_biceps_brachii"
+      right_module_ids: "right_triceps_brachii"
+      right_module_ids: "right_brachioradialis"
+    }
+  }
+  cost {
+    work {
+      slot_id: "sword_arm"
+      force { value: 0 unit: NEWTON }
+      power { value: 20 unit: WATT }
+      duration { value: 0.20 unit: SECOND }
+    }
+  }
+  phases { warmup_millis: 250 active_millis: 0 recovery_millis: 300 interruptible_by_damage: true }
+  cooldown_millis: 2000
+  effects {
+    at_millis: 250
+    weapon_strike {
+      shape: SECTOR
+      distance { value: 2.9 unit: METER }
+      angle { value: 24 unit: DEGREE }
+      facing_offset { value: 0 unit: DEGREE }
+      multiplier { value: 0.85 unit: RATIO }
+      maximum_targets: 1
+      cast_target_limit: 1
+      knockback { value: 0 unit: RATIO }
+      can_two_hand: false
+      two_hand_multiplier { value: 1 unit: RATIO }
+      break_shield: false
+      last_strike: true
+      durability_base: 1
+      shield_cooldown_millis: 0
+      shield_break_millis: 0
+      dedup_group: "wind_thrust"
+      main_hand_damage_type_id: "meridian_story:wind_thrust_main_hand"
+      off_hand_damage_type_id: "meridian_story:wind_thrust_off_hand"
+    }
+  }
+  presentation {
+    icon_id: "meridian_story:wind_thrust"
+    display_name: "追风直刺"
+    description: "剑尖平平向前送去。对方往旁一让，这一刺就落了空。"
+  }
+}
+
+definitions {
+  id: "meridian_story:moon_lift"
+  version: 1
+  category: ATTACK
+  minimum_realm: WANDERING_QI
+  slots {
+    id: "sword_arm"
+    module: TISSUE
+    tags: "human:arm_muscle"
+    minimum_count: 3
+    maximum_count: 3
+    relative_arm {
+      arm: WEAPON_ARM
+      left_module_ids: "left_biceps_brachii"
+      left_module_ids: "left_triceps_brachii"
+      left_module_ids: "left_brachioradialis"
+      right_module_ids: "right_biceps_brachii"
+      right_module_ids: "right_triceps_brachii"
+      right_module_ids: "right_brachioradialis"
+    }
+  }
+  cost {
+    work {
+      slot_id: "sword_arm"
+      force { value: 0 unit: NEWTON }
+      power { value: 25 unit: WATT }
+      duration { value: 0.20 unit: SECOND }
+    }
+  }
+  phases { warmup_millis: 200 active_millis: 0 recovery_millis: 400 interruptible_by_damage: true }
+  cooldown_millis: 3000
+  effects {
+    at_millis: 200
+    weapon_strike {
+      shape: SECTOR
+      distance { value: 1.8 unit: METER }
+      angle { value: 80 unit: DEGREE }
+      facing_offset { value: 0 unit: DEGREE }
+      multiplier { value: 0.70 unit: RATIO }
+      maximum_targets: 2
+      cast_target_limit: 2
+      knockback { value: 0 unit: RATIO }
+      can_two_hand: false
+      two_hand_multiplier { value: 1 unit: RATIO }
+      break_shield: false
+      last_strike: true
+      durability_base: 1
+      shield_cooldown_millis: 0
+      shield_break_millis: 0
+      dedup_group: "moon_lift"
+      main_hand_damage_type_id: "meridian_story:moon_lift_main_hand"
+      off_hand_damage_type_id: "meridian_story:moon_lift_off_hand"
+    }
+  }
+  presentation {
+    icon_id: "meridian_story:moon_lift"
+    display_name: "月弧轻撩"
+    description: "剑尖从低处撩起，在并肩两人身前划过一道短弧。"
+  }
+}

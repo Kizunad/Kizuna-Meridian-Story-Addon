@@ -101,6 +101,11 @@ dependencies {
     // 验收人体与出身窗口的夹具需要读取宿主的 owo 控件。
     clientTestCompileOnly libs.owo
     clientTestCompileOnly files(kizunaWorkspace.artifact('inventory-ui', '', false))
+    clientTestCompileOnly files(kizunaWorkspace.artifact('human', 'fabric', false))
+    clientTestCompileOnly files(kizunaWorkspace.artifact('ui', 'client', false),
+            kizunaWorkspace.artifact('combat-ui', 'fabric', false), kizunaWorkspace.artifact('combat-ui', 'shared', false),
+            kizunaWorkspace.artifact('technique', 'fabric', false), kizunaWorkspace.artifact('technique', 'shared', false),
+            kizunaWorkspace.artifact('technique', 'server', false))
     gametestImplementation files(kizunaWorkspace.artifact('vanilla-damage', 'fabric', false))
     gametestImplementation files(kizunaWorkspace.artifact('human', 'fabric', false))
     gametestImplementation files(kizunaWorkspace.artifact('technique', 'fabric', false),

@@ -11,7 +11,8 @@
       "dev.kizuna.meridian.story.fabric.RebornGameTest",
       "dev.kizuna.meridian.story.fabric.PhysiqueGameTest",
       "dev.kizuna.meridian.story.fabric.PhysiqueOpeningTest",
-      "dev.kizuna.meridian.story.fabric.PhysiqueWorkTest"
+      "dev.kizuna.meridian.story.fabric.PhysiqueWorkTest",
+      "dev.kizuna.meridian.story.fabric.YunxiGameTest"
     ]
   }
 }
