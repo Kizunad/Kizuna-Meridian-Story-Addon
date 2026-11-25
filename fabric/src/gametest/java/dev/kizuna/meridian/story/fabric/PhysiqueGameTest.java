@@ -154,7 +154,9 @@ public final class PhysiqueGameTest {
                 online.connection().tick();
             }
         });
-        var sequence = choose(test, first, PhysiqueScene.LONE).thenExecute(() -> scene.injureTo(TRIGGER))
+        var sequence = choose(test, first, PhysiqueScene.LONE)
+                .thenWaitUntil(() -> readyForPhysique(test, first))
+                .thenExecute(() -> scene.injureTo(TRIGGER))
                 .thenWaitUntil(() -> test.assertTrue(scene.effect() != null, "等待第一次爆发")).thenExecute(() -> {
                     var active = scene.physique();
                     times[0] = active.getReadyAtTick();
@@ -243,6 +245,11 @@ public final class PhysiqueGameTest {
     static void selected(GameTestHelper test, StoryPlayer actor, String id) {
         test.assertTrue(Origins.chosen(actor.player()).filter(value -> value.id().toString().equals(id)).isPresent(),
                 "等待出身 " + id);
+    }
+
+    private static void readyForPhysique(GameTestHelper test, StoryPlayer actor) {
+        selected(test, actor, PhysiqueScene.LONE);
+        test.assertTrue(new PhysiqueScene(actor.player()).physique().getEnduringLimbs(), "等待孤星体质同步");
     }
 
     private static void compareBurst(GameTestHelper test, PhysiqueScene scene) {
