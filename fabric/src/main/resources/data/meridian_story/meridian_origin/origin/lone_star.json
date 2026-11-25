@@ -1,0 +1,12 @@
+{
+  "weight": 10,
+  "icon": "minecraft:flint",
+  "talents": [
+    {"type": "meridian_story:enduring_limbs", "params": {}},
+    {"type": "meridian_story:gritted_counter", "params": {}}
+  ],
+  "threats": [
+    {"type": "meridian_story:slow_opening", "params": {}},
+    {"type": "meridian_story:road_trouble", "params": {}}
+  ]
+}

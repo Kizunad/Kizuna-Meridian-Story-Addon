@@ -1,0 +1,213 @@
+plugins { id 'net.fabricmc.fabric-loom' }
+
+description = '剧情数据包、身体宿主、世界交互与对话界面。'
+
+repositories {
+    flatDir { dirs kizunaWorkspace.artifact('pathfinding', 'core', false).parentFile }
+    maven { url = 'https://maven.fabricmc.net/' }
+    maven { url = 'https://maven.wispforest.io/releases' }
+    // owo 0.13 依赖的 kdl4j 只发布在 JitPack，只从那里取这一组。
+    maven {
+        url = 'https://jitpack.io'
+        content { includeGroup 'com.github.kdl-org' }
+    }
+}
+
+dependencies {
+    // 26.x 不混淆：直接用官方名编译，没有映射，模组依赖也不经重映射。
+    minecraft libs.minecraft
+    implementation libs.fabric.loader
+    implementation libs.fabric.api
+
+    // 纯规则和协议随正式 JAR 嵌套；Framework 的身体协议经 server 库传递进来。
+    implementation project(':server')
+    include project(':server')
+    include project(':shared')
+    // 身体、出身与来犯使用各自的公开服务端入口。
+    compileOnly('dev.kizuna.meridian:fabric') { transitive = false }
+    compileOnly('dev.kizuna.meridian.origin:fabric') { transitive = false }
+    compileOnly('dev.kizuna.meridian.humanoid:fabric') { transitive = false }
+    compileOnly('dev.kizuna.meridian.humanoid:server') { transitive = false }
+    compileOnly('dev.kizuna.meridian.human:server') { transitive = false }
+    compileOnly('dev.kizuna.meridian.human:shared') { transitive = false }
+    compileOnly files(kizunaWorkspace.artifact('vanilla-healing', 'server', false))
+    testImplementation libs.junit4
+}
+
+test { useJUnit() }
+
+processResources {
+    inputs.property 'version', project.version
+    def preserveJsonEscapes = true
+    inputs.property 'preserveJsonEscapes', preserveJsonEscapes
+    filesMatching('fabric.mod.json') {
+        expand([version: project.version]) { escapeBackslash = preserveJsonEscapes }
+    }
+}
+
+// 开发运行沿用 Meridian 统一完整装配；Framework 的 server 库和 Protobuf 在安装 JAR 中是嵌套库，开发时显式补齐。
+apply from: new File(kizunaWorkspace.directory('framework'), 'scripts/full-assembly.gradle')
+dependencies {
+    localRuntime('local.meridian:server') { transitive = false }
+    localRuntime libs.protobuf.java
+    localRuntime files(kizunaWorkspace.artifact('human', 'client', false))
+}
+
+def gametestRunDirectory = providers.gradleProperty('gametestRunDir').getOrElse('build/gametest')
+def restartPhase = providers.gradleProperty('storyRestart').getOrElse('')
+if (!(restartPhase in ['', 'save', 'load'])) {
+    throw new GradleException('未知剧情重启测试阶段：' + restartPhase)
+}
+
+sourceSets {
+    gametest {
+        java.srcDir 'src/testFixtures/java'
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+    }
+    clientTest {
+        java.srcDir 'src/testFixtures/java'
+        java.srcDir 'src/gametest/java/dev/kizuna/meridian/humanoid/fabric'
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+    }
+}
+
+dependencies {
+    // 测试玩家走功法库测试夹具的登录和网络入口。
+    gametestImplementation files(kizunaWorkspace.artifact('technique', 'fabric', false).path
+            .replace('.jar', '-test-fixtures.jar'))
+}
+
+tasks.named('processGametestResources') {
+    inputs.property 'restartPhase', restartPhase
+    doLast {
+        if (restartPhase) {
+            def metadata = new File(destinationDir, 'fabric.mod.json')
+            def document = new groovy.json.JsonSlurper().parse(metadata)
+            document.entrypoints['fabric-gametest'] = ['dev.kizuna.meridian.story.fabric.StoryRestartGameTest']
+            metadata.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(document))
+        }
+    }
+}
+
+tasks.named('processClientTestResources') {
+    from('src/gametest/resources') { include 'data/**', 'assets/**' }
+}
+
+dependencies {
+    gametestImplementation('dev.kizuna.meridian.origin:server') { transitive = false }
+    clientTestImplementation('dev.kizuna.meridian.origin:shared') { transitive = false }
+    // 验收人体与出身窗口的夹具需要读取宿主的 owo 控件。
+    clientTestCompileOnly libs.owo
+    clientTestCompileOnly files(kizunaWorkspace.artifact('inventory-ui', '', false))
+    gametestImplementation files(kizunaWorkspace.artifact('vanilla-damage', 'fabric', false))
+    gametestImplementation files(kizunaWorkspace.artifact('human', 'fabric', false))
+    gametestImplementation files(kizunaWorkspace.artifact('technique', 'fabric', false),
+            kizunaWorkspace.artifact('technique', 'shared', false), kizunaWorkspace.artifact('technique', 'server', false))
+    gametestImplementation('dev.kizuna.meridian.origin:shared') { transitive = false }
+    gametestImplementation files(kizunaWorkspace.artifact('humanoid-taunts', 'fabric', false))
+}
+
+loom {
+    mods {
+        meridian_story { sourceSet sourceSets.main }
+        meridian_story_test { sourceSet sourceSets.gametest }
+        meridian_story_client_test { sourceSet sourceSets.clientTest }
+    }
+    runs {
+        gametest {
+            server()
+            name '剧情 GameTest'
+            source sourceSets.gametest
+            runDir gametestRunDirectory
+            vmArg '-Dfabric-api.gametest'
+            vmArg('-Dmeridian.story.restart=' + restartPhase)
+            if (providers.gradleProperty('gametestFilter').isPresent()) {
+                vmArg "-Dfabric-api.gametest.filter=${providers.gradleProperty('gametestFilter').get()}"
+            }
+            vmArg '-Dfabric-api.gametest.report-file=build/gametest-results.xml'
+        }
+    }
+}
+
+// 客户端截图验收的窗口大小和输出目录名可以改，窄窗口另跑一次：-PstoryClientSize=480x720 -PstoryClientShots=narrow。
+def clientSize = providers.gradleProperty('storyClientSize').getOrElse('1280x720').split('x')
+def clientShots = providers.gradleProperty('storyClientShots').getOrElse('wide')
+loom {
+    runs {
+        clientTest {
+            client()
+            name '剧情界面客户端测试'
+            source sourceSets.clientTest
+            runDir 'build/clienttest'
+            vmArg "-Dmeridian.story.scene=${providers.gradleProperty('storyScene').getOrElse('dialogue')}"
+            vmArg "-Dmeridian.story.shots=${clientShots}"
+            programArgs '--quickPlaySingleplayer', 'story-dialogue-test', '--width', clientSize[0], '--height', clientSize[1]
+        }
+    }
+}
+
+afterEvaluate {
+    tasks.named('runGametest') {
+        doFirst {
+            // 每局从空目录新建世界；固定本机地址与最小视距，避免占用用户环境。
+            // 完整装配里的 owo 在开发环境缺 eula.txt 时会读控制台确认，Gradle 进程没有输入会直接卡住，所以预先写好。
+            def runDirectory = file(gametestRunDirectory)
+            runDirectory.mkdirs()
+            def world = new File(runDirectory, 'world')
+            if (restartPhase != 'load') {
+                world.deleteDir()
+            } else if (!world.isDirectory()) {
+                throw new GradleException('缺少前一进程保存的世界：' + world)
+            }
+            new File(runDirectory, 'eula.txt').text = 'eula=true\n'
+            new File(runDirectory, 'server.properties').text = '''online-mode=false
+server-ip=127.0.0.1
+server-port=0
+generate-structures=false
+view-distance=2
+simulation-distance=2
+'''
+        }
+    }
+}
+
+// 客户端验收只取 GameTest 世界的全局存档：level.dat（数据包等）与 data/minecraft（平坦生成设置、游戏规则、天气与时钟），
+// 每次重新同步世界设置，令客户端验收从尚未接线的玩家身体开始。
+tasks.register('prepareClientTestWorld', Sync) {
+    from(layout.projectDirectory.dir("${gametestRunDirectory}/world")) {
+        include 'level.dat', 'data/minecraft/**'
+    }
+    into layout.buildDirectory.dir('clienttest/saves/story-dialogue-test')
+    outputs.upToDateWhen { false }
+}
+afterEvaluate {
+    tasks.named('runClientTest') {
+        dependsOn tasks.named('prepareClientTestWorld')
+        def report = layout.buildDirectory.file('clienttest-results.txt')
+        def options = layout.buildDirectory.file('clienttest/options.txt')
+        doFirst {
+            report.get().asFile.text = 'success=false\n'
+            // 以简体中文启动；4903 是 26.2 的数据版本，免得选项走升级。
+            // 26.2 首次启动先弹无障碍引导，挡住 quickPlay 进不了世界，所以每次都标记为已引导。
+            options.get().asFile.parentFile.mkdirs()
+            options.get().asFile.text = 'version:4903\nlang:zh_cn\nonboardAccessibility:false\n'
+            if (providers.gradleProperty('storyScene').getOrElse('') == 'physique') {
+                // 并列核图固定候选池，仍由正式出身服务抽卡、发包和确认选择。
+                options.get().asFile.append('guiScale:2\n')
+                def origin = layout.buildDirectory.file('clienttest/config/meridian-origin.toml').get().asFile
+                origin.parentFile.mkdirs()
+                origin.text = '''selection = true
+offer_count = 2
+disabled = ["meridian_humanoid:apprentice", "meridian_humanoid:disgraced", "meridian_humanoid:merchant", "meridian_humanoid:orphan", "meridian_humanoid:reborn", "meridian_story:lone_star"]
+'''
+            }
+        }
+        doLast {
+            if (!report.get().asFile.text.startsWith('success=true')) {
+                throw new GradleException("剧情界面客户端验收失败：${report.get().asFile}")
+            }
+        }
+    }
+}

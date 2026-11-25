@@ -1,0 +1,12 @@
+{
+  "story.test.roadside": "Stop to talk",
+  "story.test.request": "The villager holds out a torn page and waits.",
+  "story.test.decline": "Decline the request",
+  "story.test.received": "I recognize this signature.",
+  "letter.meridian_story_test.register.register": "Signed page",
+  "letter.meridian_story_test.register.register.lore": "Half a seal marks the corner.",
+  "story.test.greeting": "Do you know the writing on this corner?",
+  "story.test.witness": "The villager holds out a hand for the paper.",
+  "story.test.trader": "The wandering trader stops and makes room beside him.",
+  "story.test.trader_greeting": "Sit and talk a while?"
+}

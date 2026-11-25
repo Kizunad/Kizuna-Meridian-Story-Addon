@@ -1,0 +1,16 @@
+description = '与 Minecraft 无关的章节、条件、凭据和进度规则。'
+
+dependencies {
+    api project(':shared')
+    api 'local.meridian:server'
+    api libs.gson
+    testImplementation libs.junit4
+}
+
+tasks.named('processTestResources') {
+    from(rootProject.file('fabric/src/gametest/resources')) { include 'data/**' }
+}
+
+test {
+    useJUnit()
+}

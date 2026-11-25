@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "origin": "meridian_humanoid:disgraced",
+  "first": "visitors",
+  "chapters": {
+    "visitors": {
+      "prompt": "story.test.request",
+      "greeting": "story.test.greeting",
+      "when": [
+        {
+          "type": "origin_ready",
+          "params": {}
+        }
+      ],
+      "on": [
+        {
+          "type": "raid_settled",
+          "params": {
+            "feud": "meridian_humanoid:disgraced#0",
+            "party": "meridian_humanoid:captors"
+          },
+          "branches": {
+            "win": {
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "register",
+                    "at": "leader_fall"
+                  }
+                }
+              ],
+              "next": "witness"
+            },
+            "escape": {
+              "stay": true
+            },
+            "loss": {
+              "stay": true
+            }
+          }
+        },
+        {
+          "type": "talk",
+          "params": {
+            "to": "minecraft:villager",
+            "label": "story.test.decline"
+          },
+          "branches": {
+            "accepted": {
+              "finish": "declined"
+            }
+          }
+        },
+        {
+          "type": "attack",
+          "params": {
+            "to": "minecraft:villager"
+          },
+          "branches": {
+            "accepted": {
+              "finish": "attacked"
+            }
+          }
+        }
+      ]
+    },
+    "witness": {
+      "prompt": "story.test.witness",
+      "greeting": "story.test.greeting",
+      "when": [
+        {
+          "type": "previous_outcome",
+          "params": {
+            "chapter": "visitors",
+            "is": "win"
+          }
+        },
+        {
+          "type": "online_days",
+          "params": {
+            "days": 1,
+            "from": "chapter"
+          }
+        },
+        {
+          "type": "heat_at_least",
+          "params": {
+            "value": 3
+          }
+        },
+        {
+          "type": "opened_at_least",
+          "params": {
+            "count": 0
+          }
+        },
+        {
+          "type": "realm_at_least",
+          "params": {
+            "realm": "wandering_qi"
+          }
+        }
+      ],
+      "on": [
+        {
+          "type": "hand_in",
+          "params": {
+            "item": "minecraft:paper",
+            "claim": "register",
+            "to": "minecraft:villager",
+            "count": 1
+          },
+          "branches": {
+            "accepted": {
+              "do": [
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.test.received"
+                  }
+                }
+              ],
+              "finish": "attested"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

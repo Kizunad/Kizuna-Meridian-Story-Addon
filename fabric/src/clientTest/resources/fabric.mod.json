@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "meridian_story_client_test",
+  "version": "1.0.0",
+  "name": "剧情对话验收",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.kizuna.meridian.story.fabric.client.DialogueClientTest",
+      "dev.kizuna.meridian.story.fabric.client.RebornClientTest",
+      "dev.kizuna.meridian.story.fabric.client.PhysiqueClientTest"
+    ]
+  }
+}

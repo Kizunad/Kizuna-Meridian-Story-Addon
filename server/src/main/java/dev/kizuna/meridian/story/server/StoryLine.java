@@ -1,0 +1,50 @@
+package dev.kizuna.meridian.story.server;
+
+import dev.kizuna.meridian.story.protocol.pb.StoryMessages.LineState;
+import java.util.List;
+import java.util.Map;
+
+/** 路径给出线 ID。章名、交互名和结局名都是可跨重载的身份。 */
+public record StoryLine(String origin, String first, Map<String, Chapter> chapters) {
+    public record Chapter(String prompt, String notice, String greeting, List<Condition> when, List<Trigger> on) {
+        public boolean ready(Facts facts, LineState state) {
+            return when.stream().allMatch(condition -> condition.test(facts, state));
+        }
+    }
+
+    public record Facts(String origin, long ticks, double heat, int realm, long opened) { }
+
+    @FunctionalInterface
+    public interface Condition {
+        boolean test(Facts facts, LineState state);
+    }
+
+    public enum Kind { RAID, HAND_IN, TALK, ATTACK }
+
+    public record Raid(String feud, String party) { }
+
+    public enum Place { ANYWHERE, VILLAGE_BELL }
+
+    public record Recipient(String id, Place place, String beforeArrival) { }
+
+    public record Interaction(Recipient recipient, String claim, String item, int count, String label) { }
+
+    public record Trigger(String id, Kind kind, Raid raid, Interaction interaction, Map<String, Branch> branches) { }
+
+    public enum Delivery { OWNER, LEADER_FALL }
+
+    public record Actions(String letter, Delivery delivery, String speech, int goodwill) { }
+
+    public record Branch(String next, String finish, String outcome, Actions actions) {
+        public String recorded(String event) {
+            if (outcome.isEmpty()) {
+                return event;
+            }
+            return outcome;
+        }
+    }
+
+    public boolean eligible(String chosen) {
+        return origin.isEmpty() || origin.equals(chosen);
+    }
+}

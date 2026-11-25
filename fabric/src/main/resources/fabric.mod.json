@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "meridian_story",
+  "version": "${version}",
+  "name": "Kizuna's Meridian Story",
+  "contact": {
+    "homepage": "https://github.com/Kizunad/Kizuna-Meridian-Story-Addon",
+    "sources": "https://github.com/Kizunad/Kizuna-Meridian-Story-Addon",
+    "issues": "https://github.com/Kizunad/Kizuna-Meridian-Story-Addon/issues"
+  },
+  "icon": "assets/meridian_story/icon.png",
+  "description": "Follow branching stories through encounters, letters and conversations.\n在来人、信物与交谈中亲历有分支的剧情。",
+  "authors": [
+    "Kizunad"
+  ],
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "environment": "*",
+  "mixins": ["meridian_story.mixins.json"],
+  "entrypoints": {
+    "meridian_origin": ["dev.kizuna.meridian.story.fabric.StoryOrigins"],
+    "main": [
+      "dev.kizuna.meridian.story.fabric.StoryFabric"
+    ]
+  },
+  "depends": {
+    "java": ">=25",
+    "minecraft": "26.2",
+    "fabricloader": ">=0.20.1",
+    "fabric-api": "*",
+    "meridian_framework": "*",
+    "meridian_human_host": "*",
+    "meridian_vanilla_healing": "*",
+    "meridian_origin": "*",
+    "meridian_humanoid_host": "*",
+    "meridian_technique": "*",
+    "meridian_humanoid_taunts": "*"
+  }
+}

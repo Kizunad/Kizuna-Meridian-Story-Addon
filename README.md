@@ -1,3 +1,3 @@
 # Kizuna-Meridian-Story-Addon
 
-Kizuna Meridian 附属（Story-Addon）。正在开发，见会话仓任务单。
+Minecraft Java 26.2 的剧情章节、信物和聊天栏对话。作者接口与数据格式见[剧情线](docs/wiki/Home.md)。

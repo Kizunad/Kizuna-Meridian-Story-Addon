@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "first": "meeting",
+  "chapters": {
+    "meeting": {
+      "prompt": "story.test.trader",
+      "greeting": "story.test.trader_greeting",
+      "when": [],
+      "on": [
+        {
+          "type": "talk",
+          "params": {"to": "minecraft:wandering_trader", "label": "story.test.roadside"},
+          "branches": {"accepted": {"finish": "met"}}
+        }
+      ]
+    }
+  }
+}

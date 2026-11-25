@@ -1,0 +1,342 @@
+{
+  "version": 1,
+  "origin": "meridian_humanoid:reborn",
+  "first": "roll",
+  "chapters": {
+    "roll": {
+      "prompt": "story.meridian_story.reborn.roll",
+      "notice": "story.meridian_story.reborn.roll",
+      "when": [],
+      "on": [
+        {
+          "type": "raid_settled",
+          "params": {
+            "feud": "meridian_humanoid:reborn#0",
+            "party": "meridian_humanoid:old_register"
+          },
+          "branches": {
+            "win": {
+              "next": "seal",
+              "record_as": "win",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "fragment",
+                    "at": "leader_fall"
+                  }
+                }
+              ]
+            },
+            "escape": {
+              "stay": true
+            },
+            "loss": {
+              "stay": true
+            }
+          }
+        }
+      ]
+    },
+    "seal": {
+      "prompt": "story.meridian_story.reborn.seal_scene",
+      "notice": "story.meridian_story.reborn.seal",
+      "greeting": "story.meridian_story.reborn.seal_greeting",
+      "when": [],
+      "on": [
+        {
+          "id": "hand",
+          "type": "hand_in",
+          "params": {
+            "to": "minecraft:villager",
+            "label": "story.meridian_story.reborn.hand",
+            "claim": "fragment",
+            "item": "minecraft:paper",
+            "count": 1
+          },
+          "branches": {
+            "accepted": {
+              "record_as": "witnessed",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "impression",
+                    "at": "owner"
+                  }
+                },
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.reborn.compare_reply"
+                  }
+                }
+              ],
+              "next": "ledger"
+            }
+          }
+        },
+        {
+          "id": "keep",
+          "type": "talk",
+          "params": {
+            "to": "minecraft:villager",
+            "label": "story.meridian_story.reborn.keep",
+            "claim": "fragment",
+            "item": "minecraft:paper",
+            "count": 1
+          },
+          "branches": {
+            "accepted": {
+              "next": "keep_page",
+              "record_as": "kept"
+            }
+          }
+        },
+        {
+          "type": "raid_settled",
+          "params": {
+            "feud": "meridian_humanoid:reborn#0",
+            "party": "meridian_humanoid:old_register"
+          },
+          "branches": {
+            "win": {
+              "next": "ledger",
+              "record_as": "self_proved",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "impression",
+                    "at": "leader_fall"
+                  }
+                }
+              ]
+            },
+            "escape": {
+              "stay": true
+            },
+            "loss": {
+              "stay": true
+            }
+          }
+        }
+      ]
+    },
+    "keep_page": {
+      "prompt": "story.meridian_story.reborn.alone",
+      "notice": "story.meridian_story.reborn.alone",
+      "when": [],
+      "on": [
+        {
+          "type": "raid_settled",
+          "params": {
+            "feud": "meridian_humanoid:reborn#0",
+            "party": "meridian_humanoid:old_register"
+          },
+          "branches": {
+            "win": {
+              "next": "ledger",
+              "record_as": "self_proved",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "impression",
+                    "at": "leader_fall"
+                  }
+                }
+              ]
+            },
+            "escape": {
+              "stay": true
+            },
+            "loss": {
+              "stay": true
+            }
+          }
+        }
+      ]
+    },
+    "ledger": {
+      "prompt": "story.meridian_story.reborn.ledger_scene",
+      "notice": "story.meridian_story.reborn.ledger",
+      "greeting": "story.meridian_story.reborn.ledger_greeting",
+      "when": [],
+      "on": [
+        {
+          "id": "archive",
+          "type": "hand_in",
+          "params": {
+            "to": "minecraft:villager",
+            "label": "story.meridian_story.reborn.archive",
+            "claim": "impression",
+            "item": "minecraft:paper",
+            "count": 1,
+            "place": "village_bell"
+          },
+          "branches": {
+            "accepted": {
+              "record_as": "archived",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "testimony",
+                    "at": "owner"
+                  }
+                },
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.reborn.archive_reply"
+                  }
+                }
+              ],
+              "next": "sign"
+            }
+          }
+        },
+        {
+          "id": "carry",
+          "type": "hand_in",
+          "params": {
+            "to": "minecraft:villager",
+            "label": "story.meridian_story.reborn.carry",
+            "claim": "impression",
+            "item": "minecraft:paper",
+            "count": 1,
+            "place": "village_bell"
+          },
+          "branches": {
+            "accepted": {
+              "record_as": "carried",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "testimony",
+                    "at": "owner"
+                  }
+                },
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.reborn.carry_reply"
+                  }
+                }
+              ],
+              "next": "sign"
+            }
+          }
+        },
+        {
+          "type": "raid_settled",
+          "params": {
+            "feud": "meridian_humanoid:reborn#0",
+            "party": "meridian_humanoid:old_register"
+          },
+          "branches": {
+            "win": {
+              "next": "sign",
+              "record_as": "copied",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "testimony",
+                    "at": "leader_fall"
+                  }
+                }
+              ]
+            },
+            "escape": {
+              "stay": true
+            },
+            "loss": {
+              "stay": true
+            }
+          }
+        }
+      ]
+    },
+    "sign": {
+      "prompt": "story.meridian_story.reborn.sign_scene",
+      "notice": "story.meridian_story.reborn.sign",
+      "greeting": "story.meridian_story.reborn.sign_greeting",
+      "when": [],
+      "on": [
+        {
+          "id": "publish",
+          "type": "hand_in",
+          "params": {
+            "to": "minecraft:villager",
+            "label": "story.meridian_story.reborn.publish",
+            "claim": "testimony",
+            "item": "minecraft:paper",
+            "count": 1,
+            "before_arrival": "meridian_humanoid:reborn#0"
+          },
+          "branches": {
+            "accepted": {
+              "record_as": "published",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "public_letter",
+                    "at": "owner"
+                  }
+                },
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.reborn.publish_reply"
+                  }
+                },
+                {
+                  "type": "vouch",
+                  "params": {
+                    "amount": 5
+                  }
+                }
+              ],
+              "finish": "published"
+            }
+          }
+        },
+        {
+          "type": "raid_settled",
+          "params": {
+            "feud": "meridian_humanoid:reborn#0",
+            "party": "meridian_humanoid:old_register"
+          },
+          "branches": {
+            "win": {
+              "finish": "sealed",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "private_letter",
+                    "at": "owner"
+                  }
+                }
+              ]
+            },
+            "escape": {
+              "stay": true
+            },
+            "loss": {
+              "stay": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

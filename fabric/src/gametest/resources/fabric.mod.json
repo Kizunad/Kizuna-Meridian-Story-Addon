@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "meridian_story_test",
+  "version": "1.0.0",
+  "name": "剧情 GameTest",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": [
+      "dev.kizuna.meridian.story.fabric.StoryGameTest",
+      "dev.kizuna.meridian.story.fabric.ChatChoiceTest",
+      "dev.kizuna.meridian.story.fabric.RebornGameTest",
+      "dev.kizuna.meridian.story.fabric.PhysiqueGameTest",
+      "dev.kizuna.meridian.story.fabric.PhysiqueOpeningTest",
+      "dev.kizuna.meridian.story.fabric.PhysiqueWorkTest"
+    ]
+  }
+}
