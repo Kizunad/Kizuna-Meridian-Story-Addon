@@ -90,13 +90,15 @@ final class StoryDialogue {
                 return;
             }
             for (var trigger : chapter.on()) {
-                if (trigger.interaction() == null || !atRecipient(view, actor, trigger, player)
-                        || (event == Kind.ATTACK) != (trigger.kind() == Kind.ATTACK)) {
+                if (trigger.interaction() == null || (event == Kind.ATTACK) != (trigger.kind() == Kind.ATTACK)
+                        || choices.size() >= LineFormat.MAX_OPTIONS) {
                     continue;
                 }
-                if (choices.size() < LineFormat.MAX_OPTIONS) {
-                    var choice = new Choice(id, state, line, trigger, Action.BRANCH);
+                var choice = new Choice(id, state, line, trigger, Action.BRANCH);
+                if (atRecipient(view, actor, trigger, player)) {
                     addChoice(choices, player, choice);
+                } else if (campReplacement(view, player, actor, choice)) {
+                    choices.add(new Choice(id, state, line, trigger, Action.REPLACE));
                 }
             }
         });
@@ -218,6 +220,10 @@ final class StoryDialogue {
             return Component.translatable("chat.meridian_story.replaced");
         }
         if (choice.trigger().kind() == Kind.HAND_IN) {
+            String key = choice.trigger().branches().get("accepted").confirmation();
+            if (!key.isEmpty()) {
+                return Component.translatable(key);
+            }
             return Component.translatable("chat.meridian_story.taken", letterName(choice));
         }
         if (!choice.trigger().interaction().claim().isEmpty()) {
@@ -270,6 +276,9 @@ final class StoryDialogue {
                 entry.getKey().startsWith("meridian_story|") && feud.equals(entry.getValue().getFeud()))) {
             return false;
         }
+        if (recipient.place() == StoryLine.Place.ROAD_CAMP || recipient.place() == StoryLine.Place.ROAD_GUIDE) {
+            return RoadFootman.recipient(player, view, actor, recipient.place());
+        }
         if (recipient.place() == StoryLine.Place.GRAVE_VISITOR) {
             return GraveVisits.recipient(view, player, actor);
         }
@@ -285,10 +294,22 @@ final class StoryDialogue {
                 .isPresent();
     }
 
+    private static boolean campReplacement(StoryStore.View view, ServerPlayer player, LivingEntity actor,
+                                           Choice choice) {
+        var interaction = choice.trigger().interaction();
+        if (interaction.recipient().place() != StoryLine.Place.ROAD_GUIDE
+                || !RoadFootman.recipient(player, view, actor, StoryLine.Place.ROAD_CAMP)) {
+            return false;
+        }
+        var claim = choice.state().getClaimsMap().get(interaction.claim());
+        return claim != null && !claim.getSpent() && letter(player, choice).carried(player) == 0;
+    }
+
     private static boolean valid(StoryStore.View view, LivingEntity actor, ServerPlayer player, Choice choice) {
         var state = view.progress().getLinesMap().get(choice.line());
         return choice.state().equals(state) && near(player, actor)
-                && atRecipient(view, actor, choice.trigger(), player)
+                && (atRecipient(view, actor, choice.trigger(), player)
+                || choice.action() == Action.REPLACE && campReplacement(view, player, actor, choice))
                 && choice.definition().eligible(view.facts().origin())
                 && choice.definition().chapters().get(state.getChapter()).ready(view.facts(), state);
     }
@@ -311,7 +332,7 @@ final class StoryDialogue {
                 return view.progress();
             }
             if (trigger.kind() == Kind.TALK) {
-                return view.progress().toBuilder().putLines(choice.line(), next.build()).build();
+                return completed(view, choice, next.build());
             }
             var spent = letter.claim().toBuilder().setSpent(true /* spent */).build();
             next.putClaims(letter.reward(), spent);
@@ -323,6 +344,17 @@ final class StoryDialogue {
                 next.putClaims(branch.actions().letter(), gift);
             }
         }
-        return view.progress().toBuilder().putLines(choice.line(), next.build()).build();
+        return completed(view, choice, next.build());
+    }
+
+    private static Progress completed(StoryStore.View view, Choice choice, LineState next) {
+        var trigger = choice.trigger();
+        var progress = view.progress().toBuilder().putLines(choice.line(), next);
+        if (trigger.interaction().recipient().place() == StoryLine.Place.ROAD_GUIDE) {
+            long ticket = view.crisis().getPending().getRoadRequest();
+            var diverted = view.progress().getRoad().toBuilder().setDivertedRequest(ticket).build();
+            progress.setRoad(diverted);
+        }
+        return progress.build();
     }
 }

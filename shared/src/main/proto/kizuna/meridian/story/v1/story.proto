@@ -7,6 +7,20 @@ message Progress {
   int32 schema = 1;
   map<string, LineState> lines = 2;
   GraveKeeper grave = 3;
+  RoadTravel road = 4;
+}
+
+// 路段按水平网格记忆；存档保存本签和进度，离线时间不折成脚程。
+message RoadTravel {
+  optional int64 camp = 1;
+  repeated int64 segments = 2;
+  int32 segment_ticks = 3;
+  int32 walking_ticks = 4;
+  int64 draws = 5;
+  bool waiting = 6;
+  int64 last_settlement = 7;
+  optional int64 current_segment = 8;
+  int64 diverted_request = 9;
 }
 
 message LineState {

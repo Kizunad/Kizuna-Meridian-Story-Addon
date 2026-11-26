@@ -13,7 +13,8 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.Event;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,6 +30,7 @@ public final class StoryFabric implements ModInitializer {
     private StoryStore store;
     private StoryRaids raids;
     private GraveVisits graves;
+    private LoneStarRoad road;
     private StoryDialogue dialogue;
 
     @Override
@@ -39,6 +41,9 @@ public final class StoryFabric implements ModInitializer {
         GrittedCounter.initialize();
         store = new StoryStore();
         graves = new GraveVisits(store);
+        road = new LoneStarRoad(store);
+        road.registerCamp();
+        RoadFootman.register();
         raids = new StoryRaids(store);
         dialogue = new StoryDialogue(store);
         var forge = new GraveForge(store);
@@ -50,16 +55,22 @@ public final class StoryFabric implements ModInitializer {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (entity instanceof ServerPlayer player) {
                 graves.leave(player);
+                road.leave(player);
             }
         });
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            shown.remove(handler.player.getUUID());
-            forge.leave(handler.player);
-            graves.leave(handler.player);
-            store.leave(handler.player);
-            dialogue.leave(handler.player);
+        var departure = Identifier.parse("meridian_story:before_encounter_departure");
+        ServerPlayerEvents.LEAVE.addPhaseOrdering(departure, Event.DEFAULT_PHASE);
+        ServerPlayerEvents.LEAVE.register(departure, player -> {
+            shown.remove(player.getUUID());
+            forge.leave(player);
+            road.leave(player);
+            graves.leave(player);
+            store.leave(player);
+            dialogue.leave(player);
         });
-        ServerTickEvents.END_SERVER_TICK.register(server -> {
+        var roadPhase = Identifier.parse("meridian_story:after_encounters");
+        ServerTickEvents.END_SERVER_TICK.addPhaseOrdering(Event.DEFAULT_PHASE, roadPhase);
+        ServerTickEvents.END_SERVER_TICK.register(roadPhase, server -> {
             server.getPlayerList().getPlayers().forEach(graves::trackPosition);
             if (server.getTickCount() % INTERVAL == 0) {
                 server.getPlayerList().getPlayers().forEach(this::tick);
@@ -146,6 +157,7 @@ public final class StoryFabric implements ModInitializer {
         }
         var view = initial.get();
         graves.tick(player, view);
+        road.tick(player, view);
         StoryLetters.deliverPending(player, store, view.progress());
         showChapters(player, view);
         if (lines.entrySet().stream().anyMatch(entry -> entry.getValue().eligible(view.facts().origin())

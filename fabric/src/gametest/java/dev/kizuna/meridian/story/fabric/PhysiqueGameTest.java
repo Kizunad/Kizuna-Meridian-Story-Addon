@@ -150,9 +150,7 @@ public final class PhysiqueGameTest {
         test.onEachTick(() -> {
             var joined = next[0];
             var online = joined == null ? first : joined;
-            if (online.connection().isConnected()) {
-                online.connection().tick();
-            }
+            online.tickConnection();
         });
         var sequence = choose(test, first, PhysiqueScene.LONE)
                 .thenWaitUntil(() -> readyForPhysique(test, first))

@@ -59,6 +59,25 @@ public final class StoryRaidFixture {
         });
     }
 
+    public static void roadClock(ServerPlayer player, long now) {
+        // 只前拨在线钟，冷却、完整场次和玩家自己的签号均取原记录。
+        CrisisFabric.engine().update(player, record -> record.toBuilder().setOnlineTicks(now).build());
+    }
+
+    public static void heatDue(ServerPlayer player) {
+        var rules = CrisisFabric.engine().rules();
+        CrisisFabric.engine().update(player, record -> record.toBuilder()
+                .setOnlineTicks(rules.frequency().protectionDays() * CrisisRules.DAY_TICKS)
+                .setTrueQi(true /* trueQi */)
+                .setHeat(rules.heat().threshold())
+                .build());
+    }
+
+    public static void fallToLeader(ServerPlayer player, Mob leader) {
+        // 沿死前伤害接线给出实际在追这名玩家的生物。
+        CrisisFabric.engine().endings().dying(player, player.damageSources().mobAttack(leader));
+    }
+
     public static void passDay(ServerPlayer player) {
         CrisisFabric.engine().update(player, record -> record.toBuilder()
                 .setOnlineTicks(record.getOnlineTicks() + CrisisRules.DAY_TICKS)

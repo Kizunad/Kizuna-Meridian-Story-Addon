@@ -58,7 +58,7 @@ record StoryLetters(String owner, String line, String reward, Claim claim) {
     }
 
     ItemStack letter(int count) {
-        var stack = new ItemStack(Items.PAPER, count);
+        var stack = new ItemStack(material(), count);
         String key = nameKey(line, reward);
         stack.set(DataComponents.ITEM_NAME, Component.translatable(key));
         stack.set(DataComponents.LORE, new ItemLore(List.of(Component.translatable(key + ".lore"))));
@@ -67,7 +67,15 @@ record StoryLetters(String owner, String line, String reward, Claim claim) {
     }
 
     boolean matches(ItemStack stack) {
-        return stack.is(Items.PAPER) && identity().equals(stack.get(DataComponents.CUSTOM_DATA));
+        return stack.is(material()) && identity().equals(stack.get(DataComponents.CUSTOM_DATA));
+    }
+
+    private net.minecraft.world.item.Item material() {
+        // 护送报酬可实际食用，投递仍按同一张具名领取凭据去重。
+        if (line.equals(LoneStarRoad.LINE) && reward.equals("loaf")) {
+            return Items.BREAD;
+        }
+        return Items.PAPER;
     }
 
     int carried(ServerPlayer player) {

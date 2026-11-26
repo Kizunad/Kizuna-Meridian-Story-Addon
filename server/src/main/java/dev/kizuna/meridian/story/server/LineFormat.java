@@ -138,7 +138,12 @@ public final class LineFormat {
             require(feud.isEmpty() || feud.matches("[a-z0-9_.-]+:[a-z0-9_./-]+#[0-9]+"), "仇家键");
             require(branches.entrySet().stream().allMatch(entry -> entry.getValue().actions().speech().isEmpty()
                     && (entry.getValue().actions().letter().isEmpty() || entry.getKey().equals("win"))), "落点动作须有胜局");
-            return new Trigger(id, Kind.RAID, new Raid(feud, resource(params, "party")), null, Map.copyOf(branches));
+            Source source = Source.FULL;
+            if (params.has("source")) {
+                source = Source.valueOf(text(params, "source").toUpperCase(java.util.Locale.ROOT));
+            }
+            var raid = new Raid(feud, resource(params, "party"), source);
+            return new Trigger(id, Kind.RAID, raid, null, Map.copyOf(branches));
         }
         require(branches.keySet().equals(Set.of("accepted")), "交互要有 accepted 分支");
         require(branches.get("accepted").actions().goodwill() == 0
@@ -159,6 +164,8 @@ public final class LineFormat {
             place = switch (text(params, "place")) {
                 case "village_bell" -> Place.VILLAGE_BELL;
                 case "grave_visitor" -> Place.GRAVE_VISITOR;
+                case "road_camp" -> Place.ROAD_CAMP;
+                case "road_guide" -> Place.ROAD_GUIDE;
                 default -> throw new IllegalArgumentException("未知交谈地点");
             };
         }
@@ -194,7 +201,9 @@ public final class LineFormat {
         long destinations = java.util.stream.Stream.of(next, finish).filter(value -> !value.isEmpty()).count();
         int expectedDestinations = stay ? 0 : 1;
         require(destinations == expectedDestinations, "分支去向须唯一");
-        return new Branch(next, finish, optionalName(json, "record_as"), actions(json, type, claims));
+        String confirmation = optionalName(json, "confirmation");
+        require(confirmation.isEmpty() || type.equals("hand_in"), "交物回执须用于交付分支");
+        return new Branch(next, finish, optionalName(json, "record_as"), actions(json, type, claims), confirmation);
     }
 
     private static Actions actions(JsonObject json, String type, Set<String> claims) {

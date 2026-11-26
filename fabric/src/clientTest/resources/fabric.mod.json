@@ -10,6 +10,7 @@
       "dev.kizuna.meridian.story.fabric.client.DialogueClientTest",
       "dev.kizuna.meridian.story.fabric.client.RebornClientTest",
       "dev.kizuna.meridian.story.fabric.GraveClientTest",
+      "dev.kizuna.meridian.story.fabric.RoadClientTest",
       "dev.kizuna.meridian.story.fabric.client.PhysiqueClientTest",
       "dev.kizuna.meridian.ui.client.YunxiClientTest"
     ]

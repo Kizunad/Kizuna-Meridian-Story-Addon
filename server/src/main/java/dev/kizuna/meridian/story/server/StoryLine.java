@@ -23,9 +23,11 @@ public record StoryLine(String origin, String first, Start start, Map<String, Ch
 
     public enum Kind { RAID, HAND_IN, TALK, ATTACK }
 
-    public record Raid(String feud, String party) { }
+    public enum Source { FULL, ROAD }
 
-    public enum Place { ANYWHERE, VILLAGE_BELL, GRAVE_VISITOR }
+    public record Raid(String feud, String party, Source source) { }
+
+    public enum Place { ANYWHERE, VILLAGE_BELL, GRAVE_VISITOR, ROAD_CAMP, ROAD_GUIDE }
 
     public record Recipient(String id, Place place, String beforeArrival) { }
 
@@ -37,7 +39,11 @@ public record StoryLine(String origin, String first, Start start, Map<String, Ch
 
     public record Actions(String letter, Delivery delivery, String speech, int goodwill) { }
 
-    public record Branch(String next, String finish, String outcome, Actions actions) {
+    public record Branch(String next, String finish, String outcome, Actions actions, String confirmation) {
+        public Branch(String next, String finish, String outcome, Actions actions) {
+            this(next, finish, outcome, actions, "");
+        }
+
         public String recorded(String event) {
             if (outcome.isEmpty()) {
                 return event;

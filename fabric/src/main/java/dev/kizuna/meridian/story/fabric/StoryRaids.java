@@ -80,7 +80,8 @@ final class StoryRaids {
         RaidReceipt receipt = view.crisis().getReceiptsMap().get(key);
         var raid = wait.trigger().raid();
         if (receipt != null) {
-            if (!receipt.getPlayer().equals(player.getStringUUID()) || !receipt.getParty().equals(raid.party())
+            if (receipt.getRoad() != (raid.source() == StoryLine.Source.ROAD)
+                    || !receipt.getPlayer().equals(player.getStringUUID()) || !receipt.getParty().equals(raid.party())
                     || !receipt.getFeud().equals(raid.feud()) || !wait.trigger().branches().containsKey(
                             receipt.getOutcome())) {
                 return;
@@ -89,6 +90,7 @@ final class StoryRaids {
         } else if (chapter.ready(view.facts(), wait.state())) {
             watched.add(key);
             var request = RaidWatch.newBuilder()
+                    .setRoad(raid.source() == StoryLine.Source.ROAD)
                     .setFeud(raid.feud())
                     .setParty(raid.party())
                     .build();

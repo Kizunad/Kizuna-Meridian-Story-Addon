@@ -1,0 +1,367 @@
+{
+  "version": 1,
+  "origin": "meridian_story:lone_star",
+  "first": "walk",
+  "chapters": {
+    "walk": {
+      "notice": "story.meridian_story.road.walk",
+      "prompt": "story.meridian_story.road.walk",
+      "when": [],
+      "on": [
+        {
+          "type": "raid_settled",
+          "params": {
+            "party": "meridian_story:road_scout",
+            "feud": "",
+            "source": "road"
+          },
+          "branches": {
+            "win": {
+              "next": "lodge",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "waybill",
+                    "at": "owner"
+                  }
+                }
+              ]
+            },
+            "escape": {
+              "stay": true
+            },
+            "loss": {
+              "stay": true
+            }
+          }
+        }
+      ]
+    },
+    "lodge": {
+      "notice": "story.meridian_story.road.lodge",
+      "prompt": "story.meridian_story.road.scene",
+      "greeting": "story.meridian_story.road.greeting",
+      "when": [],
+      "on": [
+        {
+          "id": "escort",
+          "type": "hand_in",
+          "params": {
+            "to": "minecraft:villager",
+            "place": "road_camp",
+            "label": "story.meridian_story.road.escort",
+            "claim": "waybill",
+            "item": "minecraft:paper",
+            "count": 1
+          },
+          "branches": {
+            "accepted": {
+              "next": "night_escort",
+              "record_as": "escorted",
+              "confirmation": "story.meridian_story.road.waybill_received",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "escort_stub",
+                    "at": "owner"
+                  }
+                },
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.road.escort_reply"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "solo",
+          "type": "hand_in",
+          "params": {
+            "to": "minecraft:villager",
+            "place": "road_camp",
+            "label": "story.meridian_story.road.solo",
+            "claim": "waybill",
+            "item": "minecraft:paper",
+            "count": 1
+          },
+          "branches": {
+            "accepted": {
+              "next": "night_solo",
+              "record_as": "alone",
+              "confirmation": "story.meridian_story.road.waybill_received",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "road_token",
+                    "at": "owner"
+                  }
+                },
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.road.solo_reply"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "night_escort": {
+      "notice": "story.meridian_story.road.night_escort",
+      "prompt": "story.meridian_story.road.night_escort",
+      "when": [
+        {
+          "type": "opened_at_least",
+          "params": {
+            "count": 1
+          }
+        }
+      ],
+      "on": [
+        {
+          "type": "raid_settled",
+          "params": {
+            "party": "meridian_story:road_pursuit",
+            "feud": "",
+            "source": "road"
+          },
+          "branches": {
+            "win": {
+              "next": "return_escort"
+            },
+            "escape": {
+              "next": "return_escort"
+            },
+            "loss": {
+              "stay": true
+            }
+          }
+        },
+        {
+          "id": "guided",
+          "type": "talk",
+          "params": {
+            "to": "minecraft:villager",
+            "place": "road_guide",
+            "label": "story.meridian_story.road.follow",
+            "claim": "escort_stub",
+            "item": "minecraft:paper",
+            "count": 1
+          },
+          "branches": {
+            "accepted": {
+              "next": "return_escort",
+              "record_as": "guided",
+              "do": [
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.road.guide"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "night_solo": {
+      "notice": "story.meridian_story.road.night_solo",
+      "prompt": "story.meridian_story.road.night_solo",
+      "when": [
+        {
+          "type": "opened_at_least",
+          "params": {
+            "count": 1
+          }
+        }
+      ],
+      "on": [
+        {
+          "type": "raid_settled",
+          "params": {
+            "party": "meridian_story:road_pursuit",
+            "feud": "",
+            "source": "road"
+          },
+          "branches": {
+            "win": {
+              "next": "return_solo"
+            },
+            "escape": {
+              "next": "return_solo"
+            },
+            "loss": {
+              "stay": true
+            }
+          }
+        },
+        {
+          "id": "detour",
+          "type": "hand_in",
+          "params": {
+            "to": "minecraft:villager",
+            "place": "road_guide",
+            "label": "story.meridian_story.road.exchange",
+            "claim": "road_token",
+            "item": "minecraft:paper",
+            "count": 1
+          },
+          "branches": {
+            "accepted": {
+              "next": "return_safe",
+              "record_as": "detour",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "safe_stub",
+                    "at": "owner"
+                  }
+                },
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.road.guide"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "return_escort": {
+      "notice": "story.meridian_story.road.return_escort",
+      "prompt": "story.meridian_story.road.return_escort",
+      "when": [],
+      "on": [
+        {
+          "id": "return",
+          "type": "hand_in",
+          "params": {
+            "to": "minecraft:villager",
+            "place": "road_camp",
+            "label": "story.meridian_story.road.give_food",
+            "claim": "escort_stub",
+            "item": "minecraft:paper",
+            "count": 1
+          },
+          "branches": {
+            "accepted": {
+              "finish": "escorted",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "loaf",
+                    "at": "owner"
+                  }
+                },
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.road.end_escort"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "return_solo": {
+      "notice": "story.meridian_story.road.return_solo",
+      "prompt": "story.meridian_story.road.return_solo",
+      "when": [],
+      "on": [
+        {
+          "id": "return",
+          "type": "hand_in",
+          "params": {
+            "to": "minecraft:villager",
+            "place": "road_camp",
+            "label": "story.meridian_story.road.give_pass",
+            "claim": "road_token",
+            "item": "minecraft:paper",
+            "count": 1
+          },
+          "branches": {
+            "accepted": {
+              "finish": "passed",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "pass",
+                    "at": "owner"
+                  }
+                },
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.road.end_solo"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "return_safe": {
+      "notice": "story.meridian_story.road.return_solo",
+      "prompt": "story.meridian_story.road.return_solo",
+      "when": [],
+      "on": [
+        {
+          "id": "return",
+          "type": "hand_in",
+          "params": {
+            "to": "minecraft:villager",
+            "place": "road_camp",
+            "label": "story.meridian_story.road.give_pass",
+            "claim": "safe_stub",
+            "item": "minecraft:paper",
+            "count": 1
+          },
+          "branches": {
+            "accepted": {
+              "finish": "passed",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "pass",
+                    "at": "owner"
+                  }
+                },
+                {
+                  "type": "speech",
+                  "params": {
+                    "speaker": "recipient",
+                    "key": "story.meridian_story.road.end_solo"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

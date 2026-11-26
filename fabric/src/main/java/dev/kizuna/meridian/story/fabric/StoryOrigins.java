@@ -35,6 +35,14 @@ public final class StoryOrigins implements OriginEntrypoint {
         registrar.threat(ROAD);
     }
 
+    static boolean roadTrouble(String origin) {
+        if (origin.isEmpty()) {
+            return false;
+        }
+        var selected = dev.kizuna.meridian.origin.fabric.Origins.all().get(Identifier.parse(origin));
+        return selected != null && !selected.threats(ROAD).isEmpty();
+    }
+
     enum Trait { ENDURING_LIMBS, GRITTED_COUNTER, SLOW_OPENING }
 
     static Set<Trait> traits(Optional<Origin> origin) {

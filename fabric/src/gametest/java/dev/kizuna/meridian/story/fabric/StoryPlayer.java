@@ -16,6 +16,8 @@ import java.util.UUID;
 import java.util.stream.Stream;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket;
+import net.minecraft.network.protocol.common.ServerboundKeepAlivePacket;
 import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.chat.ClickEvent;
@@ -65,6 +67,22 @@ record StoryPlayer(ServerPlayer player, RecordingConnection connection) implemen
         TestPlayers.logIn(player, connection);
         player.setGameMode(GameType.CREATIVE);
         return new StoryPlayer(player, connection);
+    }
+
+    void tickConnection() {
+        // 模拟原版客户端对本刻心跳的应答，慢速整服测试也能维持在线。
+        if (!connection.isConnected()) {
+            return;
+        }
+        var packets = connection.packets();
+        int first = packets.size();
+        connection.tick();
+        int end = packets.size();
+        for (int index = first; index < end; index++) {
+            if (packets.get(index) instanceof ClientboundKeepAlivePacket ping) {
+                new ServerboundKeepAlivePacket(ping.getId()).handle(player.connection);
+            }
+        }
     }
 
     void chooseOrigin() {
