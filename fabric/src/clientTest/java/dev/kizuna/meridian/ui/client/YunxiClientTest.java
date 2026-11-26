@@ -3,6 +3,7 @@ package dev.kizuna.meridian.ui.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.kizuna.meridian.combat.fabric.client.CombatSlotAccess;
 import dev.kizuna.meridian.story.fabric.YunxiMortal;
+import dev.kizuna.meridian.story.fabric.client.YunxiTimeline;
 import dev.kizuna.meridian.technique.fabric.TechniqueCodex;
 import dev.kizuna.meridian.technique.fabric.TechniqueFabric;
 import dev.kizuna.meridian.technique.fabric.TechniqueScrollItems;
@@ -33,13 +34,16 @@ public final class YunxiClientTest implements ClientModInitializer {
     private static final String BOOK = "meridian_story:yunxi";
     private static final String VOLUME = BOOK + "_upper";
     private static final Identifier SCROLL = Identifier.parse(VOLUME + "_scroll");
-    private static final List<String> FORMS = List.of("meridian_story:wind_thrust", "meridian_story:moon_lift");
+    private static final List<String> FORMS = List.of("meridian_story:wind_thrust",
+            "meridian_story:moon_lift", "meridian_story:flash_parry");
     private static final int SETTLE = 12;
     private static final int TIMEOUT = 1800;
     private enum Stage {
-        OPEN, MISSING, GIVE, ITEM, READ, PAGE, EQUIP, LEARNED, STANCE, HUD, CAST, VERIFY, CAPTURE, DONE
+        OPEN, MISSING, GIVE, ITEM, READ, PAGE, EQUIP, LEARNED, STANCE, HUD, CAST, VERIFY,
+        CAPTURE, CAMERA, TIMELINE, DONE
     }
     private Stage stage = Stage.OPEN;
+    private YunxiTimeline timeline;
     private int ticks;
     private int steady;
     private int slot;
@@ -105,6 +109,18 @@ public final class YunxiClientTest implements ClientModInitializer {
                 stage = Stage.VERIFY;
             }
             case VERIFY -> verifyCast(client);
+            case CAMERA -> {
+                if (++steady >= SETTLE) {
+                    steady = 0;
+                    timeline = new YunxiTimeline(client);
+                    stage = Stage.TIMELINE;
+                }
+            }
+            case TIMELINE -> {
+                if (timeline.tick(client)) {
+                    finish(client, "");
+                }
+            }
             default -> { }
         }
     }
@@ -129,7 +145,7 @@ public final class YunxiClientTest implements ClientModInitializer {
     }
 
     private void codex(Minecraft client, CodexProgress.State expected, String file, Stage next) {
-        // 选书只操作正式书页；状态由服务器已同步的两式知识决定。
+        // 选书只操作正式书页；状态由服务器已同步的上卷知识决定。
         if (!(client.gui.screen() instanceof CodexScreen screen)) {
             return;
         }
@@ -178,7 +194,8 @@ public final class YunxiClientTest implements ClientModInitializer {
         if (used) {
             slot++;
             if (slot == FORMS.size()) {
-                finish(client, "");
+                tap(GLFW.GLFW_KEY_R);
+                stage = Stage.CAMERA;
             } else {
                 stage = Stage.CAST;
             }

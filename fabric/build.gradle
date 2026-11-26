@@ -99,6 +99,7 @@ dependencies {
     gametestImplementation('dev.kizuna.meridian.origin:server') { transitive = false }
     clientTestImplementation('dev.kizuna.meridian.origin:shared') { transitive = false }
     // 验收人体与出身窗口的夹具需要读取宿主的 owo 控件。
+    clientTestCompileOnly files(kizunaWorkspace.artifact('vanilla-damage', 'fabric', false))
     clientTestCompileOnly libs.owo
     clientTestCompileOnly files(kizunaWorkspace.artifact('inventory-ui', '', false))
     clientTestCompileOnly files(kizunaWorkspace.artifact('human', 'fabric', false))

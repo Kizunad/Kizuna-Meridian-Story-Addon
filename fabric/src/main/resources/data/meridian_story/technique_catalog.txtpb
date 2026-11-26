@@ -40,6 +40,7 @@ volumes {
   display_name: "云溪剑谱·上卷"
   techniques { id: "meridian_story:wind_thrust" version: 1 }
   techniques { id: "meridian_story:moon_lift" version: 1 }
+  techniques { id: "meridian_story:flash_parry" version: 1 }
 }
 
 definitions {
@@ -161,5 +162,85 @@ definitions {
     icon_id: "meridian_story:moon_lift"
     display_name: "月弧轻撩"
     description: "剑尖从低处撩起，在并肩两人身前划过一道短弧。"
+  }
+}
+
+definitions {
+  id: "meridian_story:flash_parry"
+  version: 1
+  category: DEFENSE
+  # 身体协议最低境界也是凡人出生境界；凡人无需开脉即可使用。
+  minimum_realm: WANDERING_QI
+  slots {
+    id: "sword_arm"
+    module: TISSUE
+    tags: "human:arm_muscle"
+    minimum_count: 3
+    maximum_count: 3
+    relative_arm {
+      arm: WEAPON_ARM
+      left_module_ids: "left_biceps_brachii"
+      left_module_ids: "left_triceps_brachii"
+      left_module_ids: "left_brachioradialis"
+      right_module_ids: "right_biceps_brachii"
+      right_module_ids: "right_triceps_brachii"
+      right_module_ids: "right_brachioradialis"
+    }
+  }
+  cost {
+    work {
+      slot_id: "sword_arm"
+      force { value: 0 unit: NEWTON }
+      power { value: 13.333333333333334 unit: WATT }
+      duration { value: 0.20 unit: SECOND }
+    }
+  }
+  phases {
+    warmup_millis: 400
+    active_duration: ACTIVE_DURATION_UNTIL_RELEASE
+    recovery_millis: 300
+    interruptible_by_damage: true
+  }
+  cooldown_millis: 4000
+  movement_speed_multiplier: 0.4
+  allow_use_while_casting: false
+  effects {
+    at_millis: 0
+    presentation {
+      # 玩家宿主按主手选择抱架片段，切换时沿用这次表现的时钟。
+      id: "meridian_basic_techniques:guard_arms"
+      duration: UNTIL_ACTIVE_END
+      start_millis: 0
+    }
+  }
+  effects {
+    at_millis: 400
+    guard {
+      maximum_hold_millis: 300
+      angle { value: 120 unit: DEGREE }
+      damage_multiplier { value: 0.7 unit: RATIO }
+      damage_tags: "meridian:melee"
+      damage_tags: "meridian_basic_techniques:guard_arrows"
+      stamina {
+        joules_per_second: 10000
+        joules_per_damage_prevented: 3000
+        break_group: "meridian_basic_techniques:guard"
+        break_millis: 1750
+        restart_ratio: 0.2
+      }
+    }
+  }
+  ai_hints {
+    minimum_distance { value: 0 unit: METER }
+    maximum_distance { value: 0 unit: METER }
+    maximum_hp_ratio { value: 1 unit: RATIO }
+    minimum_qi_ratio { value: 0 unit: RATIO }
+    category_weight { value: 1 unit: RATIO }
+    support { role: AI_ROLE_GUARD }
+  }
+  presentation {
+    icon_id: "meridian_story:flash_parry"
+    display_name: "瞬息格剑"
+    description: "横剑护住额前。架开来剑，收剑便能顺势斜劈。"
   }
 }

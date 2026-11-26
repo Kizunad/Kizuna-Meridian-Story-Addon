@@ -1,0 +1,75 @@
+schema_version: 1
+namespace: "meridian_story"
+binding_template_groups: "human:humanoid"
+
+volumes {
+  id: "meridian_story:yunxi_lower"
+  book_id: "meridian_story:yunxi"
+  display_name: "云溪剑谱·下卷"
+  scroll_item: false
+  techniques { id: "meridian_story:cloud_cleaver" version: 1 }
+}
+
+definitions {
+  id: "meridian_story:cloud_cleaver"
+  version: 1
+  category: ATTACK
+  minimum_realm: TRUE_QI
+  slots {
+    id: "hand_meridians" module: MERIDIAN tags: "human:hand_meridian"
+    minimum_count: 2 maximum_count: 2 require_opened: true
+  }
+  slots {
+    id: "foot_meridian" module: MERIDIAN tags: "human:foot_meridian"
+    minimum_count: 1 maximum_count: 1 require_opened: true
+  }
+  cost {
+    qi {
+      slot_id: "hand_meridians" phase: GAS matching: ANY_ATTRIBUTE_AT_LEAST_PHASE
+      amount { value: 0.9 unit: QI } distribution: EVEN
+    }
+  }
+  follow_up {
+    transitions {
+      previous { id: "meridian_story:flash_parry" version: 1 }
+      requires_guard_contact: true
+      recovery_start_ratio { value: 1 unit: RATIO }
+      after_recovery_millis: 500
+      start_millis: 200
+    }
+  }
+  phases { warmup_millis: 450 active_millis: 0 recovery_millis: 450 interruptible_by_damage: true }
+  cooldown_millis: 4000
+  effects {
+    at_millis: 0
+    presentation { id: "meridian_door_breaker:door_breaker_cleave" duration: UNTIL_RECOVERY_END start_millis: 0 }
+  }
+  effects {
+    at_millis: 450
+    weapon_strike {
+      shape: SECTOR
+      distance { value: 2.4 unit: METER }
+      angle { value: 55 unit: DEGREE }
+      facing_offset { value: 0 unit: DEGREE }
+      multiplier { value: 1.20 unit: RATIO }
+      maximum_targets: 1
+      cast_target_limit: 1
+      knockback { value: 0 unit: RATIO }
+      can_two_hand: false
+      two_hand_multiplier { value: 1 unit: RATIO }
+      break_shield: false
+      last_strike: true
+      durability_base: 1
+      shield_cooldown_millis: 0
+      shield_break_millis: 0
+      dedup_group: "cloud_cleaver"
+      main_hand_damage_type_id: "meridian_story:cloud_cleaver_main_hand"
+      off_hand_damage_type_id: "meridian_story:cloud_cleaver_off_hand"
+    }
+  }
+  presentation {
+    icon_id: "meridian_story:cloud_cleaver"
+    display_name: "裁云斜劈"
+    description: "展臂自高处斜劈一人。方才架开来剑，这一劈便少绕半圈。"
+  }
+}

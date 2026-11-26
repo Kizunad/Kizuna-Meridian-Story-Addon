@@ -32,6 +32,7 @@ public final class YunxiGameTest {
     private static final Identifier SCROLL = Identifier.parse(PREFIX + "yunxi_upper_scroll");
     private static final BlockPos START = new BlockPos(3, 2, 3);
     private static final double WORK_SECONDS = 0.20;
+    private static final int UPPER_FORMS = 3;
     private static final int MUSCLES = 3;
     private static final int AFTER_STRIKE = 8;
     private static final double SIDE = 0.57;
@@ -134,7 +135,7 @@ public final class YunxiGameTest {
         group.buildContents(parameters);
         test.assertTrue(group.getDisplayItems().stream().anyMatch(stack -> stack.is(item)), "创造栏缺上卷");
         var volume = item.scroll().volume();
-        test.assertTrue(volume.getScrollDropsCount() == 0 && volume.getTechniquesCount() == 2,
+        test.assertTrue(volume.getScrollDropsCount() == 0 && volume.getTechniquesCount() == UPPER_FORMS,
                 "卷目或生存掉落错误");
         test.succeed();
     }
@@ -166,7 +167,7 @@ public final class YunxiGameTest {
         }
     }
 
-    private static void prepare(GameTestHelper test, ServerPlayer player) {
+    static void prepare(GameTestHelper test, ServerPlayer player) {
         player.setGameMode(GameType.SURVIVAL);
         player.setNoGravity(true /* noGravity */);
         var origin = Vec3.atBottomCenterOf(test.absolutePos(START));
@@ -179,7 +180,8 @@ public final class YunxiGameTest {
         test.assertTrue(result instanceof InteractionResult.Success && scroll.isEmpty(), "凡人读卷未消耗一卷");
         var known = TechniqueFabric.service().known(player.getUUID()).stream()
                 .map(entry -> entry.technique().getId()).collect(Collectors.toSet());
-        test.assertTrue(known.containsAll(Set.of(Form.THRUST.id, Form.LIFT.id)), "读卷未学齐刺撩");
+        var upper = Set.of(Form.THRUST.id, Form.LIFT.id, PREFIX + "flash_parry");
+        test.assertTrue(known.containsAll(upper), "读卷未学齐上卷三式");
     }
 
     private static void cast(GameTestHelper test, ServerPlayer player, Form form) {
@@ -230,10 +232,10 @@ public final class YunxiGameTest {
         }
     }
 
-    private static final class ObservedCow extends Cow {
-        private int hits;
-        private String damageType;
-        private float damage;
+    static final class ObservedCow extends Cow {
+        int hits;
+        String damageType;
+        float damage;
 
         ObservedCow(ServerLevel level) {
             super(EntityTypes.COW, level);
