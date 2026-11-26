@@ -1,0 +1,268 @@
+schema_version: 1
+namespace: "meridian_story"
+binding_template_groups: "human:humanoid"
+
+books {
+  id: "meridian_story:xunxi"
+  display_name: "寻隙剑谱"
+  held_item_rules {
+    required_item_tags: "minecraft:swords"
+    refusals { reason: "你得握住剑，才能出招。" translation_key: "technique.meridian_story.yunxi_sword_required" }
+    categories {
+      id: "swords"
+      item_tags: "minecraft:swords"
+      selection_priority: 0
+      base_damage_source: ITEM_ATTACK_DAMAGE
+      base_damage { value: 1 unit: RATIO }
+      injury_kind: CUTTING
+      shield_interaction: NO_SHIELD_BREAK
+      can_break_doors: false
+    }
+    categories {
+      id: "other_items"
+      selection_priority: 1
+      base_damage_source: FIXED_DAMAGE
+      base_damage { value: 0 unit: DAMAGE_POINT }
+      injury_kind: BLUNT
+      shield_interaction: NO_SHIELD_BREAK
+      can_break_doors: false
+    }
+    durability { multiplier { value: 1 unit: RATIO } }
+    selection_order: CATEGORY_PRIORITY
+    selection_order: DURABILITY_MULTIPLIER
+    selection_order: PREFER_MAIN_HAND
+  }
+}
+
+volumes {
+  id: "meridian_story:xunxi_full"
+  book_id: "meridian_story:xunxi"
+  display_name: "寻隙剑谱·全卷"
+  techniques { id: "meridian_story:side_step" version: 1 }
+  techniques { id: "meridian_story:held_thrust" version: 1 }
+  techniques { id: "meridian_story:back_lift" version: 1 }
+}
+
+definitions {
+  id: "meridian_story:side_step"
+  version: 1
+  category: MOVEMENT
+  minimum_realm: WANDERING_QI
+  slots {
+    id: "leg_muscles"
+    module: TISSUE
+    tags: "human:leg_muscle"
+    minimum_count: 6
+    maximum_count: 6
+  }
+  cost {
+    work {
+      slot_id: "leg_muscles"
+      force { value: 0 unit: NEWTON }
+      power { value: 16.666666666666668 unit: WATT }
+      duration { value: 0.20 unit: SECOND }
+    }
+  }
+  phases { warmup_millis: 200 active_millis: 100 recovery_millis: 350 interruptible_by_damage: true }
+  cooldown_millis: 3000
+  effects {
+    at_millis: 200
+    impulse {
+      direction: SIDE
+      speed { value: 12 unit: METERS_PER_SECOND }
+      maximum_distance { value: 1 unit: METER }
+    }
+  }
+  presentation {
+    icon_id: "meridian_story:side_step"
+    display_name: "错步避锋"
+    description: "向左或向右横挪一步，让开正面来的一剑。这一步不伤人。"
+  }
+}
+
+definitions {
+  id: "meridian_story:held_thrust"
+  version: 1
+  category: ATTACK
+  minimum_realm: TRUE_QI
+  learn_requires_open_meridians: true
+  slots {
+    id: "sword_arm"
+    module: TISSUE
+    tags: "human:arm_muscle"
+    minimum_count: 3
+    maximum_count: 3
+    relative_arm {
+      arm: WEAPON_ARM
+      left_module_ids: "left_biceps_brachii"
+      left_module_ids: "left_triceps_brachii"
+      left_module_ids: "left_brachioradialis"
+      right_module_ids: "right_biceps_brachii"
+      right_module_ids: "right_triceps_brachii"
+      right_module_ids: "right_brachioradialis"
+    }
+  }
+  slots {
+    id: "hand_meridian" module: MERIDIAN tags: "human:hand_meridian"
+    minimum_count: 1 maximum_count: 1 require_opened: true
+  }
+  cost {
+    qi {
+      slot_id: "hand_meridian" phase: GAS matching: ANY_ATTRIBUTE_AT_LEAST_PHASE
+      amount { value: 0.7 unit: QI } distribution: EVEN
+    }
+    work {
+      slot_id: "sword_arm"
+      force { value: 0 unit: NEWTON }
+      power { value: 28.333333333333332 unit: WATT }
+      duration { value: 0.30 unit: SECOND }
+    }
+  }
+  phases { warmup_millis: 500 active_millis: 0 recovery_millis: 450 interruptible_by_damage: true }
+  cooldown_millis: 4000
+  effects {
+    at_millis: 0
+    weapon_strike {
+      shape: SECTOR
+      distance { value: 2.4 unit: METER }
+      angle { value: 30 unit: DEGREE }
+      facing_offset { value: 0 unit: DEGREE }
+      multiplier { value: 1.05 unit: RATIO }
+      maximum_targets: 1
+      cast_target_limit: 1
+      knockback { value: 0 unit: RATIO }
+      can_two_hand: false
+      two_hand_multiplier { value: 1 unit: RATIO }
+      break_shield: false
+      last_strike: false
+      durability_base: 1
+      shield_cooldown_millis: 0
+      shield_break_millis: 0
+      dedup_group: "held_thrust_pin"
+      main_hand_damage_type_id: "meridian_story:held_thrust_main_hand"
+      off_hand_damage_type_id: "meridian_story:held_thrust_off_hand"
+      pin_target: true
+    }
+  }
+  effects {
+    at_millis: 500
+    weapon_strike {
+      shape: SECTOR
+      distance { value: 2.4 unit: METER }
+      angle { value: 30 unit: DEGREE }
+      facing_offset { value: 0 unit: DEGREE }
+      multiplier { value: 1.05 unit: RATIO }
+      maximum_targets: 1
+      cast_target_limit: 1
+      knockback { value: 0 unit: RATIO }
+      can_two_hand: false
+      two_hand_multiplier { value: 1 unit: RATIO }
+      break_shield: false
+      last_strike: true
+      durability_base: 1
+      shield_cooldown_millis: 0
+      shield_break_millis: 0
+      dedup_group: "held_thrust"
+      main_hand_damage_type_id: "meridian_story:held_thrust_main_hand"
+      off_hand_damage_type_id: "meridian_story:held_thrust_off_hand"
+      pinned_drift { value: 0.6 unit: METER }
+    }
+  }
+  presentation {
+    icon_id: "meridian_story:held_thrust"
+    display_name: "顿剑直刺"
+    description: "盯住一人和他站的地方，剑顿片刻再直刺。人若挪开，这一剑便刺空。"
+  }
+}
+
+definitions {
+  id: "meridian_story:back_lift"
+  version: 1
+  category: ATTACK
+  minimum_realm: TRUE_QI
+  learn_requires_open_meridians: true
+  slots {
+    id: "leg_muscles"
+    module: TISSUE
+    tags: "human:leg_muscle"
+    minimum_count: 6
+    maximum_count: 6
+  }
+  slots {
+    id: "sword_arm"
+    module: TISSUE
+    tags: "human:arm_muscle"
+    minimum_count: 3
+    maximum_count: 3
+    relative_arm {
+      arm: WEAPON_ARM
+      left_module_ids: "left_biceps_brachii"
+      left_module_ids: "left_triceps_brachii"
+      left_module_ids: "left_brachioradialis"
+      right_module_ids: "right_biceps_brachii"
+      right_module_ids: "right_triceps_brachii"
+      right_module_ids: "right_brachioradialis"
+    }
+  }
+  slots {
+    id: "hand_meridian" module: MERIDIAN tags: "human:hand_meridian"
+    minimum_count: 1 maximum_count: 1 require_opened: true
+  }
+  cost {
+    qi {
+      slot_id: "hand_meridian" phase: GAS matching: ANY_ATTRIBUTE_AT_LEAST_PHASE
+      amount { value: 0.9 unit: QI } distribution: EVEN
+    }
+    work {
+      slot_id: "leg_muscles"
+      force { value: 0 unit: NEWTON }
+      power { value: 15.0 unit: WATT }
+      duration { value: 0.20 unit: SECOND }
+    }
+    work {
+      slot_id: "sword_arm"
+      force { value: 0 unit: NEWTON }
+      power { value: 21.666666666666668 unit: WATT }
+      duration { value: 0.20 unit: SECOND }
+    }
+  }
+  phases { warmup_millis: 200 active_millis: 250 recovery_millis: 400 interruptible_by_damage: true }
+  cooldown_millis: 4000
+  effects {
+    at_millis: 200
+    impulse {
+      direction: BACKWARD
+      speed { value: 12 unit: METERS_PER_SECOND }
+      maximum_distance { value: 0.8 unit: METER }
+      blocked_cancels_strikes: true
+    }
+  }
+  effects {
+    at_millis: 450
+    weapon_strike {
+      shape: SECTOR
+      distance { value: 1.8 unit: METER }
+      angle { value: 40 unit: DEGREE }
+      facing_offset { value: 0 unit: DEGREE }
+      multiplier { value: 0.85 unit: RATIO }
+      maximum_targets: 1
+      cast_target_limit: 1
+      knockback { value: 0 unit: RATIO }
+      can_two_hand: false
+      two_hand_multiplier { value: 1 unit: RATIO }
+      break_shield: false
+      last_strike: true
+      durability_base: 1
+      shield_cooldown_millis: 0
+      shield_break_millis: 0
+      dedup_group: "back_lift"
+      main_hand_damage_type_id: "meridian_story:back_lift_main_hand"
+      off_hand_damage_type_id: "meridian_story:back_lift_off_hand"
+    }
+  }
+  presentation {
+    icon_id: "meridian_story:back_lift"
+    display_name: "撤步回撩"
+    description: "先退一步，再朝身前一人自下撩起。背后没有退路，这一撩就出不来。"
+  }
+}

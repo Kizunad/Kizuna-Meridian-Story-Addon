@@ -21,7 +21,7 @@
 
 身体内 `meridian_story:progress` 保存协议版本、每条线的入章时刻、分支、最后场次与凭据。宿主拒绝修订号时重读后再算；未知版本或损坏记录保留原值。可直接参考[测试数据包](../../fabric/src/gametest/resources/data/meridian_story_test/meridian_story/line/register.json)。
 
-《云溪剑谱》的卷目、刺撩距离与持剑臂费用见[云溪剑谱](Yunxi.md)。
+《云溪剑谱》的卷目、刺撩距离与持剑臂费用见[云溪剑谱](Yunxi.md)。陈恪《寻隙剑谱》三式的位移、钉住目标和费用见[寻隙剑谱](Xunxi.md)。
 
 ## 重生归来
 

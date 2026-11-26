@@ -18,6 +18,9 @@ public final class YunxiForms {
     public static final String LIFT = "meridian_story:moon_lift";
     public static final String RETURN = "meridian_story:shadow_return";
     public static final String TWIN = "meridian_story:twin_pearls";
+    public static final String SIDE_STEP = "meridian_story:side_step";
+    public static final String HELD_THRUST = "meridian_story:held_thrust";
+    public static final String BACK_LIFT = "meridian_story:back_lift";
     public static final String GUARD = "meridian_basic_techniques:guard";
     public static final int WARMUP = 8;
     public static final int HOLD = 6;

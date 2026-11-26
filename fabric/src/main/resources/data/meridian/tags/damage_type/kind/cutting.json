@@ -7,6 +7,10 @@
     "meridian_story:shadow_return_main_hand",
     "meridian_story:shadow_return_off_hand",
     "meridian_story:twin_pearls_main_hand",
-    "meridian_story:twin_pearls_off_hand"
+    "meridian_story:twin_pearls_off_hand",
+    "meridian_story:held_thrust_main_hand",
+    "meridian_story:held_thrust_off_hand",
+    "meridian_story:back_lift_main_hand",
+    "meridian_story:back_lift_off_hand"
   ]
 }

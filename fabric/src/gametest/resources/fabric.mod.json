@@ -19,7 +19,8 @@
       "dev.kizuna.meridian.story.fabric.YunxiParryTest",
       "dev.kizuna.meridian.story.fabric.YunxiInheritanceTest",
       "dev.kizuna.meridian.story.fabric.YunxiLowerTest",
-      "dev.kizuna.meridian.story.fabric.YunxiComboTest"
+      "dev.kizuna.meridian.story.fabric.YunxiComboTest",
+      "dev.kizuna.meridian.story.fabric.XunxiGameTest"
     ]
   }
 }
