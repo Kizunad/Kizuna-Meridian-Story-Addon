@@ -31,6 +31,7 @@ public final class StoryFabric implements ModInitializer {
     private StoryRaids raids;
     private GraveVisits graves;
     private LoneStarRoad road;
+    private FallenCultivator roadside;
     private StoryDialogue dialogue;
 
     @Override
@@ -45,10 +46,12 @@ public final class StoryFabric implements ModInitializer {
         road = new LoneStarRoad(store);
         road.registerCamp();
         RoadFootman.register();
+        roadside = new FallenCultivator(store);
+        roadside.register();
         raids = new StoryRaids(store);
         dialogue = new StoryDialogue(store);
         var forge = new GraveForge(store);
-        StoryChat.register(dialogue, forge);
+        StoryChat.register(dialogue, forge, roadside);
         registerResources();
         Origins.CHOSEN.register((player, origin) -> ready(player, origin.id().toString()));
         Origins.READY.register((player, origin) ->
@@ -57,6 +60,7 @@ public final class StoryFabric implements ModInitializer {
             if (entity instanceof ServerPlayer player) {
                 graves.leave(player);
                 road.leave(player);
+                roadside.leave(player);
             }
         });
         var departure = Identifier.parse("meridian_story:before_encounter_departure");
@@ -65,6 +69,7 @@ public final class StoryFabric implements ModInitializer {
             shown.remove(player.getUUID());
             forge.leave(player);
             road.leave(player);
+            roadside.leave(player);
             graves.leave(player);
             store.leave(player);
             dialogue.leave(player);
@@ -159,6 +164,7 @@ public final class StoryFabric implements ModInitializer {
         var view = initial.get();
         graves.tick(player, view);
         road.tick(player, view);
+        roadside.tick(player, view);
         StoryLetters.deliverPending(player, store, view.progress());
         showChapters(player, view);
         if (lines.entrySet().stream().anyMatch(entry -> entry.getValue().eligible(view.facts().origin())

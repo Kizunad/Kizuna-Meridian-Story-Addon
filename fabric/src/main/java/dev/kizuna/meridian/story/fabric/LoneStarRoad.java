@@ -163,7 +163,8 @@ final class LoneStarRoad {
         }
         RoadTravel next;
         if (!before.getWaiting() && advanced.getWalkingTicks() >= DRAW) {
-            long draw = Math.incrementExact(before.getDraws());
+            // 通用路上事件也会占用轻场签号，新签总排在两边已用过的号之后。
+            long draw = Math.max(before.getDraws(), view.crisis().getRoadRequest()) + 1;
             next = advanced.toBuilder()
                     .setDraws(draw)
                     .setWaiting(selected(player, draw))

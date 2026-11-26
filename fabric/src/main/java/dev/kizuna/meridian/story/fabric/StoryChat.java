@@ -19,12 +19,14 @@ public final class StoryChat {
     private static final int NONCE_LENGTH = 36;
     private static StoryDialogue dialogue;
     private static GraveForge forge;
+    private static FallenCultivator roadside;
 
     private StoryChat() { }
 
-    static void register(StoryDialogue handler, GraveForge smith) {
+    static void register(StoryDialogue handler, GraveForge smith, FallenCultivator fallen) {
         dialogue = handler;
         forge = smith;
+        roadside = fallen;
     }
 
     record Selection(String nonce, long revision, int option) {
@@ -59,10 +61,13 @@ public final class StoryChat {
                     if (forgeClick) {
                         return forge.choose(player, selection);
                     }
-                    return dialogue.choose(player, selection);
+                    return dialogue.choose(player, selection).or(() -> roadside.choose(player, selection));
                 })
                 .orElseGet(() -> Component.translatable("screen.meridian_story.expired"));
-        player.sendSystemMessage(reply.copy().withStyle(ChatFormatting.GRAY));
+        // 落地后要等追兵到场才说话的选择不回显。
+        if (!reply.getString().isEmpty()) {
+            player.sendSystemMessage(reply.copy().withStyle(ChatFormatting.GRAY));
+        }
         return true;
     }
 

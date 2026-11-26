@@ -1,0 +1,8 @@
+{
+  "_comment": "允许剧情授予的通用卷：袖手拳外卷（Villager-Fist）、破门斩上卷·木门（Door-Breaker）、行矢弓上卷·百步（Wayfarer-Archery）。均为各书入门卷，三附属在 fabric.mod.json 中声明为依赖。",
+  "values": [
+    "meridian_villager:outer_scroll",
+    "meridian_door_breaker:upper_scroll",
+    "meridian_wayfarer:bow_upper_scroll"
+  ]
+}

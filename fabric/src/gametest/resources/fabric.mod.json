@@ -10,6 +10,7 @@
       "dev.kizuna.meridian.story.fabric.ChatChoiceTest",
       "dev.kizuna.meridian.story.fabric.GraveGameTest",
       "dev.kizuna.meridian.story.fabric.RoadGameTest",
+      "dev.kizuna.meridian.story.fabric.FallenGameTest",
       "dev.kizuna.meridian.story.fabric.RebornGameTest",
       "dev.kizuna.meridian.story.fabric.PhysiqueGameTest",
       "dev.kizuna.meridian.story.fabric.PhysiqueOpeningTest",

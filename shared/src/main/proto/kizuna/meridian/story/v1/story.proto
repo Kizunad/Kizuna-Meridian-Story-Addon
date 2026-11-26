@@ -8,6 +8,7 @@ message Progress {
   map<string, LineState> lines = 2;
   GraveKeeper grave = 3;
   RoadTravel road = 4;
+  Roadside roadside = 5;
 }
 
 // 路段按水平网格记忆；存档保存本签和进度，离线时间不折成脚程。
@@ -57,4 +58,33 @@ message GraveKeeper {
   int32 last_fragment = 8;
   bool upper_received = 9;
   bool lower_received = 10;
+}
+
+// 通用路上事件：场次号、冷却、已抽签的网格，以及进行中的一场和同案门人追查。
+message Roadside {
+  int64 cases = 1;
+  int64 rest_until = 2;
+  repeated int64 tiles = 3;
+  RoadsideCase current = 4;
+  int64 inquiry_at = 5;
+  int64 inquiry_ticket = 6;
+  bool inquiry_shown = 7;
+  string last_ending = 8;
+}
+
+// 伤者、唯一原卷（held 为真时仍在伤者怀里，交出、被夺或死亡掉落时先翻转再造出那一份实物）、开场预签、救护回执、本人出手、在场证人、追兵签与喝声。
+message RoadsideCase {
+  int64 number = 1;
+  string actor = 2;
+  int64 site = 3;
+  int32 roll = 4;
+  string stage = 5;
+  string scroll = 6;
+  bool healed = 7;
+  bool witnessed = 8;
+  int64 ticket = 9;
+  bool shouted = 10;
+  bool held = 11;
+  bool wounded = 12;
+  int64 arrived_at = 13;
 }

@@ -40,6 +40,9 @@
     "meridian_humanoid_host": "*",
     "meridian_technique": "*",
     "meridian_vanilla_damage": "*",
-    "meridian_humanoid_taunts": "*"
+    "meridian_humanoid_taunts": "*",
+    "meridian_villager": "*",
+    "meridian_door_breaker": "*",
+    "meridian_wayfarer": "*"
   }
 }
