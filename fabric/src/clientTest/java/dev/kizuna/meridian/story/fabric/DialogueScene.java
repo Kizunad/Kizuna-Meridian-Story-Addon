@@ -22,7 +22,7 @@ public final class DialogueScene {
         player.setGameMode(net.minecraft.world.level.GameType.CREATIVE);
         var source = server.createCommandSourceStack();
         server.getCommands().performPrefixedCommand(source, "meridian debug origin set "
-                + player.getScoreboardName() + " meridian_humanoid:disgraced");
+                + player.getScoreboardName() + " meridian_story_test:witness");
         var actor = EntityTypes.VILLAGER.create(player.level(), EntitySpawnReason.COMMAND);
         if (actor == null) {
             throw new IllegalStateException("证人未生成");

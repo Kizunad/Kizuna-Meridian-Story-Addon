@@ -1,0 +1,16 @@
+{
+  "weight": 10,
+  "icon": "minecraft:paper",
+  "talents": [],
+  "threats": [
+    {
+      "type": "meridian_humanoid:crisis",
+      "params": {
+        "party": "meridian_story:road_scout",
+        "first_after_days": [10, 16],
+        "interval_days": [24, 36],
+        "stages": 0
+      }
+    }
+  ]
+}

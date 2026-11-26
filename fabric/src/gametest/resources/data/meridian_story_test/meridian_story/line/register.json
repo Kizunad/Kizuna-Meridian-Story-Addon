@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "origin": "meridian_humanoid:disgraced",
+  "origin": "meridian_story_test:witness",
   "first": "visitors",
   "chapters": {
     "visitors": {
@@ -16,8 +16,8 @@
         {
           "type": "raid_settled",
           "params": {
-            "feud": "meridian_humanoid:disgraced#0",
-            "party": "meridian_humanoid:captors"
+            "feud": "meridian_story_test:witness#0",
+            "party": "meridian_story:road_scout"
           },
           "branches": {
             "win": {

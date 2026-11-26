@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 
 public final class StoryRulesTest {
     private static final String FIXTURE = "/data/meridian_story_test/meridian_story/line/register.json";
-    private static final String ORIGIN = "meridian_humanoid:disgraced";
+    private static final String ORIGIN = "meridian_story_test:witness";
     private static final int DAY = 24_000;
     private static final int OPENED = 2;
     private static final double HEAT = 3;

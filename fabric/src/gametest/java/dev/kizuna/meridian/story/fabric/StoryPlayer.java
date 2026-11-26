@@ -30,7 +30,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameType;
 
 record StoryPlayer(ServerPlayer player, RecordingConnection connection) implements AutoCloseable {
-    static final String ORIGIN = "meridian_humanoid:disgraced";
+    static final String ORIGIN = "meridian_story_test:witness";
     static final String LINE = "meridian_story_test:register";
     private static final int NAME_LENGTH = 8;
     private static final int OFFER_COUNT = 3;

@@ -12,7 +12,7 @@ public final class StoryRaidFixture {
     private StoryRaidFixture() { }
 
     public static void arrive(ServerPlayer player, Mob leader, String feud) {
-        arrive(player, leader, feud, "meridian_humanoid:captors");
+        arrive(player, leader, feud, "meridian_story:road_scout");
     }
 
     public static void arrive(ServerPlayer player, Mob leader, String feud, String party) {

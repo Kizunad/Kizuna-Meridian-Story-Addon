@@ -119,7 +119,7 @@ public final class PhysiqueClientTest implements ClientModInitializer {
             return;
         }
         boolean ready = switch (stage) {
-            case CANDIDATES -> StoryOriginCards.ordinaryAndFarmer(screen);
+            case CANDIDATES -> StoryOriginCards.ordinaryAndLoneStar(screen);
             case READ -> StoryOriginCards.chosen(screen, PhysiqueScene.ORDINARY);
             case LONE_CARD -> StoryOriginCards.chosen(screen, PhysiqueScene.LONE);
             default -> false;

@@ -10,12 +10,12 @@ public final class StoryOriginCards {
         // 复用当前屏幕里的候选与按钮。
     }
 
-    public static boolean ordinaryAndFarmer(OriginScreen screen) {
+    public static boolean ordinaryAndLoneStar(OriginScreen screen) {
         // 候选必须恰好是这两张，且当前视口真的并排排版。
         var offer = screen.offer();
         var ids = offer.getCardsList().stream().map(card -> card.getId()).collect(Collectors.toSet());
         return !offer.getChosen() && screen.sideBySide()
-                && ids.equals(Set.of(PhysiqueScene.ORDINARY, PhysiqueScene.FARMER));
+                && ids.equals(Set.of(PhysiqueScene.ORDINARY, PhysiqueScene.LONE));
     }
 
     public static boolean chosen(OriginScreen screen, String id) {

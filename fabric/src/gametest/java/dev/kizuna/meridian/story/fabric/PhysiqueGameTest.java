@@ -27,7 +27,6 @@ import net.minecraft.world.item.Items;
 public final class PhysiqueGameTest {
     private static final int TIMEOUT = 750;
     private static final int REJOIN = 6;
-    private static final int FARMER_STANDING = 20;
     private static final int TICKS_PER_SECOND = 20;
     private static final int EIGHT_SECONDS = 8 * TICKS_PER_SECOND;
     private static final int NINETY_SECONDS = 90 * TICKS_PER_SECOND;
@@ -46,38 +45,37 @@ public final class PhysiqueGameTest {
 
     @GameTest(maxTicks = TIMEOUT)
     public void ordinaryKeepsBaselineAndSharesTraderAcrossRelog(GameTestHelper test) {
-        var id = StoryPlayer.offered(test, PhysiqueScene.ORDINARY, PhysiqueScene.FARMER);
+        var id = StoryPlayer.offered(test, PhysiqueScene.ORDINARY, PhysiqueScene.LONE);
         var first = StoryPlayer.join(test, id);
-        var farmer = StoryPlayer.join(test, StoryPlayer.offered(test, PhysiqueScene.FARMER));
+        var loneStar = StoryPlayer.join(test, StoryPlayer.offered(test, PhysiqueScene.LONE));
         var villager = test.spawn(EntityTypes.VILLAGER, 1, 1, 1);
         var trader = test.spawn(EntityTypes.WANDERING_TRADER, 1, 1, 1);
         var next = new StoryPlayer[1];
         var sequence = test.startSequence().thenWaitUntil(() -> {
-            test.assertTrue(!cards(first).isEmpty() && !cards(farmer).isEmpty(), "等待两位玩家的真实候选");
+            test.assertTrue(!cards(first).isEmpty() && !cards(loneStar).isEmpty(), "等待两位玩家的真实候选");
         }).thenExecute(() -> {
             var offer = cards(first).getFirst();
             test.assertTrue(card(offer, PhysiqueScene.ORDINARY).getIcon().equals("minecraft:bread")
-                    && card(offer, PhysiqueScene.FARMER).getIcon().equals("minecraft:wheat"), "面包和小麦未并列");
+                    && card(offer, PhysiqueScene.LONE).getIcon().equals("minecraft:flint"), "面包和燧石未并列");
             first.chooseOrigin(PhysiqueScene.ORDINARY);
-            farmer.chooseOrigin(PhysiqueScene.FARMER);
+            loneStar.chooseOrigin(PhysiqueScene.LONE);
         }).thenWaitUntil(() -> {
             selected(test, first, PhysiqueScene.ORDINARY);
-            selected(test, farmer, PhysiqueScene.FARMER);
+            selected(test, loneStar, PhysiqueScene.LONE);
             test.assertTrue(first.state(COMMON).getChapter().equals("meeting"), "平常出身未接通用线");
         });
         sequence.thenExecute(() -> {
             test.assertTrue(villager.getPlayerReputation(first.player()) == 0, "平常出身不应得到村民声望");
-            test.assertTrue(villager.getPlayerReputation(farmer.player()) == FARMER_STANDING, "农户声望没有加二十");
             var origin = Origins.chosen(first.player()).orElseThrow();
             test.assertTrue(origin.talents().isEmpty() && origin.threats().isEmpty(), "平常出身多了天赋或麻烦");
-            for (var actor : List.of(first, farmer)) {
+            for (var actor : List.of(first, loneStar)) {
                 actor.player().setPos(trader.position());
                 StoryGameTest.use(actor, trader);
                 actor.choose(actor.offers().getLast());
                 test.assertTrue(actor.state(COMMON).getEnding().equals("met"), "两种出身未走到同一通用事件结局");
             }
             first.close();
-            farmer.close();
+            loneStar.close();
         }).thenExecuteAfter(REJOIN, () -> next[0] = StoryPlayer.join(test, id))
                 .thenWaitUntil(() -> selected(test, next[0], PhysiqueScene.ORDINARY))
                 .thenExecute(() -> verifyOrdinary(test, next[0])).thenSucceed();

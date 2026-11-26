@@ -14,7 +14,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 /** 游戏客户端和服务端用同一笔非致死部位损耗跨越生命阈值。 */
 public final class PhysiqueScene {
     public static final String ORDINARY = "meridian_story:ordinary";
-    public static final String FARMER = "meridian_humanoid:farmer";
     public static final String LONE = "meridian_story:lone_star";
     private static final String SOURCE = "meridian_story_test:part_injuries";
     private final StoryBodies bodies = new StoryBodies();
