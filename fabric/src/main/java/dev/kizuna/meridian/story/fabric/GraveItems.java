@@ -1,5 +1,6 @@
 package dev.kizuna.meridian.story.fabric;
 
+import dev.kizuna.meridian.story.protocol.pb.StoryMessages.GraveKeeper;
 import java.util.List;
 import java.util.function.Function;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
@@ -43,6 +44,36 @@ final class GraveItems {
     static final Item FRAGMENT = register("grave_fragment", Item::new);
     static final Item GUIDE = register("grave_guide", Guide::new);
     static final List<Item> GIFTS = List.of(SWORD, NOTES, GUIDE);
+
+    enum Scroll {
+        UPPER("yunxi_upper_scroll"), LOWER("yunxi_lower_scroll");
+
+        private final Identifier id;
+
+        Scroll(String path) {
+            id = Identifier.fromNamespaceAndPath("meridian_story", path);
+        }
+
+        Item item() {
+            return BuiltInRegistries.ITEM.getOptional(id).orElseThrow();
+        }
+
+        boolean received(GraveKeeper grave) {
+            return switch (this) {
+                case UPPER -> grave.getUpperReceived();
+                case LOWER -> grave.getLowerReceived();
+            };
+        }
+
+        GraveKeeper mark(GraveKeeper grave) {
+            var next = grave.toBuilder();
+            switch (this) {
+                case UPPER -> next.setUpperReceived(true /* upperReceived */);
+                case LOWER -> next.setLowerReceived(true /* lowerReceived */);
+            }
+            return next.build();
+        }
+    }
 
     private GraveItems() { }
 

@@ -106,8 +106,6 @@ public final class GraveGameTest {
             var stone = GraveSite.get(a.player().level()).anchor().orElseThrow();
             var item = a.player().getInventory().getNonEquipmentItems().stream()
                     .filter(stack -> stack.is(GraveItems.SWORD)).findFirst().orElseThrow();
-            test.assertTrue(GraveInheritance.currentSword(a.player(), item), "旧剑无本人剑号");
-            test.assertTrue(!GraveInheritance.currentSword(b.player(), item), "两名守墓人串剑号");
             for (var owner : List.of(a, b)) {
                 GraveItems.GUIDE.use(owner.player().level(), owner.player(), InteractionHand.MAIN_HAND);
                 var directions = Component.translatable("story.meridian_story.tomb.directions",
@@ -285,7 +283,8 @@ public final class GraveGameTest {
                     test.assertTrue(record(next[0]).getDelivered() == GraveItems.GIFTS.size(), "重登丢失继承记录");
                     test.assertTrue(Origins.chosen(player).isPresent() && CrisisEncounters.current(player).isPresent(),
                             "等待重登的出身和在线时钟");
-                }).thenExecute(() -> verifyForge(test, next[0])).thenSucceed();
+                }).thenWaitUntil(() -> test.assertTrue(GraveSite.get(next[0].player().level()).anchor().isPresent(),
+                        "等待碑前重铸位置")).thenExecute(() -> verifyForge(test, next[0])).thenSucceed();
     }
 
     private static void verifyForge(GameTestHelper test, StoryPlayer owner) {
@@ -305,7 +304,7 @@ public final class GraveGameTest {
         test.assertTrue(sword.getDamageValue() == before - sword.getMaxDamage() / 4, "碑前修剑未扣碎片补耐久");
         inventory.setItem(0, new ItemStack(GraveItems.GUIDE));
         forge(test, owner, stone);
-        test.assertTrue(!GraveInheritance.currentSword(player, sword), "重铸后旧剑号仍有效");
+        test.assertTrue(inventory.contains(stack -> stack.is(GraveItems.SWORD)), "重铸后未收到旧剑");
         test.assertTrue(!inventory.contains(stack -> stack.is(GraveItems.FRAGMENT) || stack.is(Items.IRON_INGOT)),
                 "重铸未收材料");
         owner.close();
@@ -386,7 +385,9 @@ public final class GraveGameTest {
                     .anyMatch(packet -> packet.type().equals(OriginNetworking.OFFER.type())), "等待出身卡"))
                     .thenExecute(() -> actor.chooseOrigin(ORIGIN));
         }
-        return sequence;
+        // 开局遗物可以先领，来访、磨剑和守候另等祖冢建好。
+        return sequence.thenWaitUntil(() -> test.assertTrue(GraveSite.get(players[0].player().level())
+                .anchor().isPresent(), "等待祖冢登记完成"));
     }
 
     private static GraveKeeper record(StoryPlayer owner) {

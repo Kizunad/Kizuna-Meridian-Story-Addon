@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "name": "剧情 GameTest",
   "environment": "*",
-  "custom": { "meridian_technique:catalogs": "data/meridian_story/yunxi_lower_test.txtpb" },
   "entrypoints": {
     "fabric-gametest": [
       "dev.kizuna.meridian.story.fabric.StoryGameTest",
@@ -16,7 +15,8 @@
       "dev.kizuna.meridian.story.fabric.PhysiqueOpeningTest",
       "dev.kizuna.meridian.story.fabric.PhysiqueWorkTest",
       "dev.kizuna.meridian.story.fabric.YunxiGameTest",
-      "dev.kizuna.meridian.story.fabric.YunxiParryTest"
+      "dev.kizuna.meridian.story.fabric.YunxiParryTest",
+      "dev.kizuna.meridian.story.fabric.YunxiInheritanceTest"
     ]
   }
 }

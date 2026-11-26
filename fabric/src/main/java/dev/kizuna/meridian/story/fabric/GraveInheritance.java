@@ -5,9 +5,8 @@ import dev.kizuna.meridian.story.protocol.pb.StoryMessages.GraveKeeper;
 import dev.kizuna.meridian.story.server.StoryProgress;
 import java.util.Optional;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 
-/** 传承读本人祭扫与剑号；剑谱的领取记录由实际发卷者提交。 */
+/** 查询守墓人在登记冢内的祭扫进度。 */
 public final class GraveInheritance {
     private GraveInheritance() { }
 
@@ -15,11 +14,6 @@ public final class GraveInheritance {
         var site = GraveSite.get(player.level());
         return site.anchor().filter(pos -> GraveVisits.inside(player.level().dimension(), player.blockPosition(), pos))
                 .isPresent() && record(player).filter(GraveKeeper::getFirstSwept).isPresent();
-    }
-
-    public static boolean currentSword(ServerPlayer player, ItemStack stack) {
-        return record(player).filter(state -> GraveItems.bound(stack, GraveItems.SWORD, state.getSwordSerial()))
-                .isPresent();
     }
 
     private static Optional<GraveKeeper> record(ServerPlayer player) {

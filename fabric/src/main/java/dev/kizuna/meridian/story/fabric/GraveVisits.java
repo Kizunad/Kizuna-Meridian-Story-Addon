@@ -14,6 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 final class GraveVisits {
@@ -80,20 +81,21 @@ final class GraveVisits {
         var level = player.level().getServer().overworld();
         var site = GraveSite.get(level);
         site.advance(level);
-        var anchor = site.anchor();
-        if (anchor.isEmpty()) {
-            return;
-        }
-        if (!progress.hasGrave()) {
+        StoryStore.View registered;
+        if (progress.hasGrave()) {
+            registered = view;
+        } else {
             var initial = GraveKeeper.newBuilder()
                     .setSwordSerial(UUID.randomUUID().toString())
                     .setLastVigil(view.facts().ticks())
                     .build();
-            put(player, view, initial);
-            return;
+            if (!put(player, view, initial)) {
+                return;
+            }
+            registered = store.read(player).orElseThrow();
         }
-        deliver(player, view);
-        keepVigil(player, view, site, anchor.orElseThrow());
+        var supplied = deliver(player, registered);
+        site.anchor().ifPresent(stone -> keepVigil(player, supplied, site, stone));
     }
 
     private void keepVigil(ServerPlayer player, StoryStore.View view, GraveSite site, BlockPos stone) {
@@ -140,20 +142,66 @@ final class GraveVisits {
                 && Math.abs(feet.getY() - stone.getY()) <= ELEVATION;
     }
 
-    private void deliver(ServerPlayer player, StoryStore.View view) {
+    private StoryStore.View deliver(ServerPlayer player, StoryStore.View view) {
+        // 初选与重登共用同一份领取进度。旧档投递到路引为止，继续核对两份独立卷据。
         var grave = view.progress().getGrave();
-        int index = grave.getDelivered();
-        if (index >= GraveItems.GIFTS.size()) {
-            return;
+        if (grave.getDelivered() >= GraveItems.GIFTS.size() && grave.getUpperReceived() && grave.getLowerReceived()) {
+            return view;
         }
-        var item = GraveItems.GIFTS.get(index);
-        var inventory = player.getInventory();
+        var equipped = deliverHeirlooms(player, view);
+        return deliverScrolls(player, equipped);
+    }
+
+    private StoryStore.View deliverHeirlooms(ServerPlayer player, StoryStore.View view) {
+        var grave = view.progress().getGrave();
+        var current = view;
         String serial = grave.getSwordSerial();
-        if (!inventory.contains(stack -> GraveItems.bound(stack, item, serial))
-                && (inventory.getFreeSlot() < 0 || !inventory.add(GraveItems.gift(item, serial)))) {
-            return;
+        var inventory = player.getInventory();
+        for (int index = grave.getDelivered(); index < GraveItems.GIFTS.size(); index++) {
+            var item = GraveItems.GIFTS.get(index);
+            var stack = GraveItems.gift(item, serial);
+            var next = current.progress().getGrave().toBuilder().setDelivered(index + 1).build();
+            boolean present = inventory.contains(held -> GraveItems.bound(held, item, serial));
+            if (!issue(player, current, next, stack, present ? Delivery.CARRIED : Delivery.MISSING)) {
+                break;
+            }
+            current = store.read(player).orElseThrow();
         }
-        put(player, view, grave.toBuilder().setDelivered(index + 1).build());
+        return current;
+    }
+
+    private StoryStore.View deliverScrolls(ServerPlayer player, StoryStore.View view) {
+        var current = view;
+        var inventory = player.getInventory();
+        for (var scroll : GraveItems.Scroll.values()) {
+            var grave = current.progress().getGrave();
+            if (scroll.received(grave)) {
+                continue;
+            }
+            var item = scroll.item();
+            boolean present = inventory.contains(stack -> stack.is(item));
+            var delivery = present ? Delivery.CARRIED : Delivery.MISSING;
+            if (issue(player, current, scroll.mark(grave), item.getDefaultInstance(), delivery)) {
+                current = store.read(player).orElseThrow();
+            }
+        }
+        return current;
+    }
+
+    private enum Delivery { CARRIED, MISSING }
+
+    private boolean issue(ServerPlayer player, StoryStore.View view, GraveKeeper next,
+                          ItemStack stack, Delivery delivery) {
+        // 单个主线程回调内核销个人凭据并放入已确认的空格，满包和提交失败都可重试。
+        var inventory = player.getInventory();
+        int slot = inventory.getFreeSlot();
+        if (delivery == Delivery.MISSING && slot < 0 || !put(player, view, next)) {
+            return false;
+        }
+        if (delivery == Delivery.MISSING) {
+            inventory.setItem(slot, stack);
+        }
+        return true;
     }
 
     private boolean put(ServerPlayer player, StoryStore.View before, GraveKeeper next) {

@@ -6,7 +6,6 @@ volumes {
   id: "meridian_story:yunxi_lower"
   book_id: "meridian_story:yunxi"
   display_name: "云溪剑谱·下卷"
-  scroll_item: false
   techniques { id: "meridian_story:cloud_cleaver" version: 1 }
 }
 
@@ -15,6 +14,7 @@ definitions {
   version: 1
   category: ATTACK
   minimum_realm: TRUE_QI
+  learn_requires_open_meridians: true
   slots {
     id: "hand_meridians" module: MERIDIAN tags: "human:hand_meridian"
     minimum_count: 2 maximum_count: 2 require_opened: true

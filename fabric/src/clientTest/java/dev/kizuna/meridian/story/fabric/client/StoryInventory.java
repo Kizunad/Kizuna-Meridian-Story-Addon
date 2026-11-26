@@ -15,9 +15,9 @@ public final class StoryInventory extends InventoryScreen {
     }
 
     public boolean hover(Minecraft client, String key) {
-        var title = Component.translatable(key);
+        String title = Component.translatable(key).getString();
         for (var slot : getMenu().slots) {
-            if (slot.getItem().getHoverName().equals(title)) {
+            if (slot.getItem().getHoverName().getString().equals(title)) {
                 long handle = client.getWindow().handle();
                 double scale = client.getWindow().getGuiScale();
                 double x = (leftPos + slot.x + SLOT_CENTER) * scale;

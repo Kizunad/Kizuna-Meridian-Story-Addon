@@ -55,4 +55,6 @@ message GraveKeeper {
   int32 visits = 6;
   string lot = 7;
   int32 last_fragment = 8;
+  bool upper_received = 9;
+  bool lower_received = 10;
 }

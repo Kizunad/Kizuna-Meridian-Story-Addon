@@ -9,6 +9,8 @@ import dev.kizuna.meridian.protocol.pb.ActivityMessages.BodyActivity;
 import dev.kizuna.meridian.technique.fabric.TechniqueFabric;
 import dev.kizuna.meridian.technique.protocol.pb.TechniqueMessages.BlockedAttackSource;
 import dev.kizuna.meridian.technique.protocol.pb.TechniqueMessages.TechniqueFailure;
+import dev.kizuna.meridian.technique.protocol.pb.TechniqueMessages.TechniqueReference;
+import dev.kizuna.meridian.technique.server.TechniqueState;
 import java.util.UUID;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -151,7 +153,7 @@ public final class YunxiParryTest {
     public void cleaveRequiresTwoHandsFootRealmAndQi(GameTestHelper test) {
         try (var actor = actor(test, InteractionHand.MAIN_HAND)) {
             var player = actor.player();
-            TechniqueFabric.service().learn(player.getUUID(), CLEAVE);
+            restoreLearnedCleave(test, player);
             test.assertTrue(cast(player, CLEAVE).getFailure() == TechniqueFailure.REALM_TOO_LOW, "凡人可斜劈");
             YunxiPracticeBody.ascend(player);
             for (var hand : YunxiPracticeBody.HANDS) {
@@ -165,6 +167,17 @@ public final class YunxiParryTest {
             checkCleave(test, player, 0);
             test.succeed();
         }
+    }
+
+    private static void restoreLearnedCleave(GameTestHelper test, ServerPlayer player) {
+        // 模拟已经记有斜劈的旧档，让起手的境界、经脉和扣费检查各自生效。
+        var bodies = new StoryBodies();
+        var body = bodies.read(player).orElseThrow();
+        var saved = TechniqueState.read(BodyProtobuf.fromMessage(body));
+        var cleave = TechniqueReference.newBuilder().setId(CLEAVE).setVersion(1).build();
+        var known = saved.getKnown(0).toBuilder().setTechnique(cleave).build();
+        var restored = saved.toBuilder().addKnown(known).build();
+        test.assertTrue(bodies.write(player, body, TechniqueState.KEY, TechniqueState.pack(restored)), "旧档知识写入失败");
     }
 
     @GameTest(maxTicks = TIMEOUT)
