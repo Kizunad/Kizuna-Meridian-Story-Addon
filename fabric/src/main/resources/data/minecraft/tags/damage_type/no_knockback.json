@@ -5,6 +5,10 @@
     "meridian_story:moon_lift_main_hand",
     "meridian_story:moon_lift_off_hand",
     "meridian_story:cloud_cleaver_main_hand",
-    "meridian_story:cloud_cleaver_off_hand"
+    "meridian_story:cloud_cleaver_off_hand",
+    "meridian_story:shadow_return_main_hand",
+    "meridian_story:shadow_return_off_hand",
+    "meridian_story:twin_pearls_main_hand",
+    "meridian_story:twin_pearls_off_hand"
   ]
 }

@@ -31,6 +31,11 @@ dependencies {
     compileOnly('dev.kizuna.meridian.human:server') { transitive = false }
     compileOnly('dev.kizuna.meridian.human:shared') { transitive = false }
     compileOnly files(kizunaWorkspace.artifact('vanilla-healing', 'server', false))
+    // 剑谱连招读功法库的打击身份和伤害附属的守方结算。
+    compileOnly files(kizunaWorkspace.artifact('technique', 'fabric', false),
+            kizunaWorkspace.artifact('technique', 'shared', false), kizunaWorkspace.artifact('technique', 'server', false))
+    compileOnly files(kizunaWorkspace.artifact('vanilla-damage', 'fabric', false),
+            kizunaWorkspace.artifact('vanilla-damage', 'server', false))
     testImplementation libs.junit4
 }
 

@@ -7,6 +7,8 @@ volumes {
   book_id: "meridian_story:yunxi"
   display_name: "云溪剑谱·下卷"
   techniques { id: "meridian_story:cloud_cleaver" version: 1 }
+  techniques { id: "meridian_story:shadow_return" version: 1 }
+  techniques { id: "meridian_story:twin_pearls" version: 1 }
 }
 
 definitions {
@@ -71,5 +73,132 @@ definitions {
     icon_id: "meridian_story:cloud_cleaver"
     display_name: "裁云斜劈"
     description: "展臂自高处斜劈一人。方才架开来剑，这一劈便少绕半圈。"
+  }
+}
+
+definitions {
+  id: "meridian_story:shadow_return"
+  version: 1
+  category: ATTACK
+  minimum_realm: TRUE_QI
+  learn_requires_open_meridians: true
+  slots {
+    id: "hand_meridians" module: MERIDIAN tags: "human:hand_meridian"
+    minimum_count: 2 maximum_count: 2 require_opened: true
+  }
+  slots {
+    id: "foot_meridian" module: MERIDIAN tags: "human:foot_meridian"
+    minimum_count: 1 maximum_count: 1 require_opened: true
+  }
+  cost {
+    qi {
+      slot_id: "hand_meridians" phase: GAS matching: ANY_ATTRIBUTE_AT_LEAST_PHASE
+      amount { value: 0.8 unit: QI } distribution: EVEN
+    }
+  }
+  phases { warmup_millis: 350 active_millis: 0 recovery_millis: 400 interruptible_by_damage: true }
+  cooldown_millis: 4000
+  effects {
+    at_millis: 350
+    weapon_strike {
+      shape: SECTOR
+      distance { value: 2.2 unit: METER }
+      angle { value: 70 unit: DEGREE }
+      facing_offset { value: 180 unit: DEGREE }
+      multiplier { value: 1.00 unit: RATIO }
+      maximum_targets: 1
+      cast_target_limit: 1
+      knockback { value: 0 unit: RATIO }
+      can_two_hand: false
+      two_hand_multiplier { value: 1 unit: RATIO }
+      break_shield: false
+      last_strike: true
+      durability_base: 1
+      shield_cooldown_millis: 0
+      shield_break_millis: 0
+      dedup_group: "shadow_return"
+      main_hand_damage_type_id: "meridian_story:shadow_return_main_hand"
+      off_hand_damage_type_id: "meridian_story:shadow_return_off_hand"
+    }
+  }
+  presentation {
+    icon_id: "meridian_story:shadow_return"
+    display_name: "旋影回剑"
+    description: "拧身把剑扫向背后那人，随即回正。脸始终朝着前方。"
+  }
+}
+
+definitions {
+  id: "meridian_story:twin_pearls"
+  version: 1
+  category: ATTACK
+  minimum_realm: TRUE_QI
+  learn_requires_open_meridians: true
+  slots {
+    id: "hand_meridians" module: MERIDIAN tags: "human:hand_meridian"
+    minimum_count: 2 maximum_count: 2 require_opened: true
+  }
+  slots {
+    id: "foot_meridian" module: MERIDIAN tags: "human:foot_meridian"
+    minimum_count: 1 maximum_count: 1 require_opened: true
+  }
+  cost {
+    qi {
+      slot_id: "hand_meridians" phase: GAS matching: ANY_ATTRIBUTE_AT_LEAST_PHASE
+      amount { value: 1.3 unit: QI } distribution: EVEN
+    }
+  }
+  phases { warmup_millis: 300 active_millis: 350 recovery_millis: 550 interruptible_by_damage: true }
+  cooldown_millis: 6000
+  effects {
+    at_millis: 300
+    weapon_strike {
+      shape: SECTOR
+      distance { value: 2.3 unit: METER }
+      angle { value: 40 unit: DEGREE }
+      facing_offset { value: 0 unit: DEGREE }
+      multiplier { value: 0.70 unit: RATIO }
+      maximum_targets: 1
+      cast_target_limit: 1
+      knockback { value: 0 unit: RATIO }
+      can_two_hand: false
+      two_hand_multiplier { value: 1 unit: RATIO }
+      break_shield: false
+      last_strike: false
+      durability_base: 1
+      shield_cooldown_millis: 0
+      shield_break_millis: 0
+      dedup_group: "twin_pearls_first"
+      main_hand_damage_type_id: "meridian_story:twin_pearls_main_hand"
+      off_hand_damage_type_id: "meridian_story:twin_pearls_off_hand"
+    }
+  }
+  effects {
+    at_millis: 650
+    weapon_strike {
+      shape: SECTOR
+      distance { value: 2.3 unit: METER }
+      angle { value: 40 unit: DEGREE }
+      facing_offset { value: 0 unit: DEGREE }
+      multiplier { value: 0.70 unit: RATIO }
+      maximum_targets: 1
+      cast_target_limit: 1
+      knockback { value: 0 unit: RATIO }
+      can_two_hand: false
+      two_hand_multiplier { value: 1 unit: RATIO }
+      break_shield: false
+      last_strike: true
+      durability_base: 1
+      shield_cooldown_millis: 0
+      shield_break_millis: 0
+      dedup_group: "twin_pearls_second"
+      main_hand_damage_type_id: "meridian_story:twin_pearls_main_hand"
+      off_hand_damage_type_id: "meridian_story:twin_pearls_off_hand"
+    }
+  }
+  presentation {
+    icon_id: "meridian_story:twin_pearls"
+    display_name: "连珠两剑"
+    description: "朝身前一人接连出两剑。对方退开，后一剑就落空。"
   }
 }

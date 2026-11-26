@@ -39,6 +39,7 @@ public final class StoryFabric implements ModInitializer {
         GraveItems.initialize();
         GraveMood.initialize();
         GrittedCounter.initialize();
+        YunxiCombo.register();
         store = new StoryStore();
         graves = new GraveVisits(store);
         road = new LoneStarRoad(store);

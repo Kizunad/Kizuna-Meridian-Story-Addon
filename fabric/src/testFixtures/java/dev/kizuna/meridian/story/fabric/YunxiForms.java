@@ -14,6 +14,10 @@ import net.minecraft.world.entity.LivingEntity;
 public final class YunxiForms {
     public static final String PARRY = "meridian_story:flash_parry";
     public static final String CLEAVE = "meridian_story:cloud_cleaver";
+    public static final String THRUST = "meridian_story:wind_thrust";
+    public static final String LIFT = "meridian_story:moon_lift";
+    public static final String RETURN = "meridian_story:shadow_return";
+    public static final String TWIN = "meridian_story:twin_pearls";
     public static final String GUARD = "meridian_basic_techniques:guard";
     public static final int WARMUP = 8;
     public static final int HOLD = 6;
