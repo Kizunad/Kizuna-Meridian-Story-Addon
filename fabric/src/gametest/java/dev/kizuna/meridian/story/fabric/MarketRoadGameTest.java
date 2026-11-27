@@ -7,6 +7,7 @@ import dev.kizuna.meridian.origin.server.OriginDraw;
 import dev.kizuna.meridian.inventory.MobInventories;
 import dev.kizuna.meridian.story.protocol.pb.StoryMessages.RoadsideCase;
 import dev.kizuna.meridian.vanilla.fabric.VanillaDamageFabric;
+import java.util.HashSet;
 import java.util.UUID;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -21,9 +22,11 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ChunkPos;
 
 public final class MarketRoadGameTest {
     private static final int LIMIT = 400;
+    private static final int ESCAPE_CHUNK_RADIUS = 1;
     private static final int SPACING = 384;
     private static final int FAKE = 30;
     private static final int SPY = 75;
@@ -220,17 +223,20 @@ public final class MarketRoadGameTest {
     @GameTest(maxTicks = LIMIT)
     public void secondRestraintProtectsEscapingVillagerWithoutGift(GameTestHelper test) {
         var f = new Fixture(test, FranticCultivator.KIND, SPY, 10);
-        var chunks = new java.util.HashSet<net.minecraft.world.level.ChunkPos>();
+        var level = test.getLevel();
+        var forcedChunks = new HashSet<ChunkPos>();
         var sequence = f.open().thenExecute(f::down);
         sequence.thenWaitUntil(() -> test.assertTrue(f.current().getBrokeFree(), "等第一次挣脱"));
         sequence.thenExecute(() -> {
             f.down();
             var c = f.current();
             var resident = VillageEncounters.actor(f.owner.player(), c.getResident()).orElseThrow();
-            var level = test.getLevel();
-            chunks.add(resident.chunkPosition());
-            chunks.add(net.minecraft.world.level.ChunkPos.containing(BlockPos.of(c.getRefuge())));
-            chunks.forEach(chunk -> level.setChunkForced(chunk.x(), chunk.z(), true /* forced */));
+            // 恢复 AI 后村民可能先横穿区块边界；测试村口的邻块也要推进实体刻。
+            for (var chunk : ChunkPos.rangeClosed(resident.chunkPosition(), ESCAPE_CHUNK_RADIUS).toList()) {
+                if (level.setChunkForced(chunk.x(), chunk.z(), true /* forced */)) {
+                    forcedChunks.add(chunk);
+                }
+            }
             resident.setNoAi(false /* noAi */);
         });
         sequence.thenWaitUntil(() -> {
@@ -242,8 +248,10 @@ public final class MarketRoadGameTest {
                             + "/" + mob.getMoveControl().getSpeedModifier()) + " -> " + BlockPos.of(c.getRefuge()));
         });
         sequence.thenExecute(() -> {
-            chunks.forEach(chunk -> test.getLevel().setChunkForced(chunk.x(), chunk.z(), false /* forced */));
+            forcedChunks.forEach(chunk -> level.setChunkForced(chunk.x(), chunk.z(), false /* forced */));
+            var settled = f.scene.road().getLastCaseOrThrow(FranticCultivator.KIND);
             f.owner.close();
+            test.assertTrue(settled.getBrokeFree() && settled.getGiftItem().isEmpty(), "二次制止不应交付谢礼");
         }).thenSucceed();
     }
 
