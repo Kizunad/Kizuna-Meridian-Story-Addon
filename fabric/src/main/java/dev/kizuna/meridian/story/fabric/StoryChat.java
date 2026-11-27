@@ -21,14 +21,17 @@ public final class StoryChat {
     private static GraveForge forge;
     private static FallenCultivator roadside;
     private static FateScenes fate;
+    private static RivalVisit rival;
 
     private StoryChat() { }
 
-    static void register(StoryDialogue handler, GraveForge smith, FallenCultivator fallen, FateScenes scenes) {
+    static void register(StoryDialogue handler, GraveForge smith, FallenCultivator fallen,
+                         FateScenes scenes, RivalVisit visit) {
         dialogue = handler;
         forge = smith;
         roadside = fallen;
         fate = scenes;
+        rival = visit;
     }
 
     record Selection(String nonce, long revision, int option) {
@@ -67,7 +70,9 @@ public final class StoryChat {
                     if (fateClick) {
                         return fate.choose(player, selection);
                     }
-                    return dialogue.choose(player, selection).or(() -> roadside.choose(player, selection));
+                    return dialogue.choose(player, selection)
+                            .or(() -> roadside.choose(player, selection))
+                            .or(() -> rival.choose(player, selection));
                 })
                 .orElseGet(() -> Component.translatable("screen.meridian_story.expired"));
         // 落地后要等追兵到场才说话的选择不回显。

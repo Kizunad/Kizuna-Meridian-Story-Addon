@@ -20,13 +20,17 @@
     "meridian_technique:catalogs": [
       "data/meridian_story/technique_catalog.txtpb",
       "data/meridian_story/yunxi_lower.txtpb",
-      "data/meridian_story/xunxi.txtpb"
+      "data/meridian_story/xunxi.txtpb",
+      "data/meridian_story/rival.txtpb"
     ]
   },
   "entrypoints": {
     "meridian_origin": ["dev.kizuna.meridian.story.fabric.StoryOrigins"],
     "main": [
       "dev.kizuna.meridian.story.fabric.StoryFabric"
+    ],
+    "client": [
+      "dev.kizuna.meridian.story.fabric.client.StoryClient"
     ]
   },
   "depends": {
@@ -45,6 +49,8 @@
     "meridian_humanoid_taunts": "*",
     "meridian_villager": "*",
     "meridian_door_breaker": "*",
-    "meridian_wayfarer": "*"
+    "meridian_wayfarer": "*",
+    "kizuna_players_animation": "*",
+    "kizuna_players_animation_mobs": "*"
   }
 }

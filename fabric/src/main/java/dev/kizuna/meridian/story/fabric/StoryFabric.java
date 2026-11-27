@@ -30,6 +30,7 @@ public final class StoryFabric implements ModInitializer {
     private StoryStore store;
     private StoryRaids raids;
     private GraveVisits graves;
+    private RivalVisit rival;
     private LoneStarRoad road;
     private FallenCultivator roadside;
     private StoryDialogue dialogue;
@@ -42,8 +43,12 @@ public final class StoryFabric implements ModInitializer {
         GraveMood.initialize();
         GrittedCounter.initialize();
         YunxiCombo.register();
+        RivalSwordsman.register();
+        RivalDuel.register();
         store = new StoryStore();
-        graves = new GraveVisits(store);
+        rival = new RivalVisit(store);
+        rival.registerCommand();
+        graves = new GraveVisits(store, rival);
         road = new LoneStarRoad(store);
         road.registerCamp();
         RoadFootman.register();
@@ -54,13 +59,14 @@ public final class StoryFabric implements ModInitializer {
         var forge = new GraveForge(store);
         fate = new FateScenes(store);
         fate.register();
-        StoryChat.register(dialogue, forge, roadside, fate);
+        StoryChat.register(dialogue, forge, roadside, fate, rival);
         registerResources();
         Origins.CHOSEN.register((player, origin) -> ready(player, origin.id().toString()));
         Origins.READY.register((player, origin) ->
                 ready(player, origin.map(value -> value.id().toString()).orElse("")));
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (entity instanceof ServerPlayer player) {
+                rival.leave(player);
                 graves.leave(player);
                 road.leave(player);
                 roadside.leave(player);
@@ -74,6 +80,7 @@ public final class StoryFabric implements ModInitializer {
             fate.leave(player);
             road.leave(player);
             roadside.leave(player);
+            rival.leave(player);
             graves.leave(player);
             store.leave(player);
             dialogue.leave(player);

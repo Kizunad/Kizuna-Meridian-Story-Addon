@@ -64,7 +64,15 @@ message Claim {
   optional int64 lore_z = 11;
 }
 
+// 陈恪口授时有式被功法库拒绝那一刻的境界和已开经脉数；两者之一有变化他才再来补授。
+message RivalRefusal {
+  int32 realm = 1;
+  int64 opened = 2;
+}
+
 // 每名守墓人的剑号、开局投递和回访事实；祖冢位置由主世界单独登记。
+// 陈恪试剑：破架后待口授、上次中止那一刻的在线刻数、已口授的寻隙式（按卷内顺序每式一位）、上次口授被拒的情形；
+// 比试本身只在内存。
 message GraveKeeper {
   string sword_serial = 1;
   int32 delivered = 2;
@@ -76,6 +84,10 @@ message GraveKeeper {
   int32 last_fragment = 8;
   bool upper_received = 9;
   bool lower_received = 10;
+  bool rival_won = 11;
+  optional int64 rival_setback = 12;
+  int32 rival_taught = 13;
+  RivalRefusal rival_refusal = 14;
 }
 
 // 通用路上事件：场次号、冷却、已抽签的网格，以及进行中的一场和同案门人追查。

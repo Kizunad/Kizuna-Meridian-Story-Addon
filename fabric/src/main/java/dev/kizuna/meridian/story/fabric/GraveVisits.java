@@ -32,10 +32,12 @@ final class GraveVisits {
 
     private final Map<UUID, Stay> arrived = new HashMap<>();
     private final StoryStore store;
+    private final RivalVisit rival;
     private final StoryBodies bodies = new StoryBodies();
 
-    GraveVisits(StoryStore store) {
+    GraveVisits(StoryStore store, RivalVisit rival) {
         this.store = store;
+        this.rival = rival;
     }
 
     void trackPosition(ServerPlayer player) {
@@ -226,6 +228,10 @@ final class GraveVisits {
     }
 
     private void visit(ServerPlayer player, StoryStore.View view, GraveSite site, long stay, long enteredAt) {
+        // 陈恪不走抽签：这次回冢他在场时，空坪归他，旧识和抽签都等下次。
+        if (rival.visit(player, view, site, enteredAt)) {
+            return;
+        }
         var grave = view.progress().getGrave();
         var level = player.level();
         var state = view.progress().getLinesMap().get(LINE);

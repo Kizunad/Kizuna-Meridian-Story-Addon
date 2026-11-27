@@ -36,6 +36,8 @@ dependencies {
             kizunaWorkspace.artifact('technique', 'shared', false), kizunaWorkspace.artifact('technique', 'server', false))
     compileOnly files(kizunaWorkspace.artifact('vanilla-damage', 'fabric', false),
             kizunaWorkspace.artifact('vanilla-damage', 'server', false))
+    // 陈恪的玩家骨架经 PA 的字节入口登记，只编译它的公开入口与实体动画协议。
+    compileOnly files(kizunaWorkspace.artifact('players-animation', '', false))
     testImplementation libs.junit4
 }
 

@@ -49,6 +49,16 @@ public final class ChatChoices {
     }
 
     public void clear() {
+        dismiss();
+    }
+
+    /** 最近一条带剧情选项的聊天还没点过。 */
+    public boolean offered() {
+        return first != null;
+    }
+
+    /** 放下最近这张邀请不点，等下一张。 */
+    public void dismiss() {
         first = null;
     }
 

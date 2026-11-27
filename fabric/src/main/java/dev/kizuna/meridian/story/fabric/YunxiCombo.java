@@ -192,7 +192,13 @@ public final class YunxiCombo {
                 && sameSword(opening.sword(), strike.weapon());
     }
 
-    private static boolean sameSword(ItemStack recorded, ItemStack held) {
+    /** 施剑者这次连珠的首拍是否已接上轻撩、落在同一次持守上；末拍结算前一直成立。 */
+    static boolean chained(UUID attacker, String chainCastId) {
+        Chain chain = chains.get(attacker);
+        return chain != null && chain.castId().equals(chainCastId);
+    }
+
+    static boolean sameSword(ItemStack recorded, ItemStack held) {
         // 每一式末击都会磨剑，比对时不计耐久；其余组件有一处不同就算换了剑。
         ItemStack first = recorded.copy();
         ItemStack second = held.copy();

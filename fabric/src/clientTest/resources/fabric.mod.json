@@ -16,6 +16,7 @@
       "dev.kizuna.meridian.story.fabric.YunxiInheritanceClient",
       "dev.kizuna.meridian.story.fabric.YunxiComboClient",
       "dev.kizuna.meridian.story.fabric.FateClientTest",
+      "dev.kizuna.meridian.story.fabric.RivalClient",
       "dev.kizuna.meridian.story.fabric.client.PhysiqueClientTest",
       "dev.kizuna.meridian.ui.client.YunxiClientTest"
     ]

@@ -1,0 +1,59 @@
+schema_version: 1
+namespace: "meridian_story"
+binding_template_groups: "human:humanoid"
+
+# 陈恪冢前试剑用的守架：守角、减伤、每点减伤的体力费与通用格挡相同，持守功率压得很低，
+# 让他架得住一整场；余力由比试在连珠首拍被接住时压到目标值。不入卷，只由陈恪学会。
+definitions {
+  id: "meridian_story:rival_guard"
+  version: 1
+  category: DEFENSE
+  minimum_realm: WANDERING_QI
+  cost {}
+  phases {
+    warmup_millis: 400
+    active_duration: ACTIVE_DURATION_UNTIL_RELEASE
+    recovery_millis: 300
+    interruptible_by_damage: true
+  }
+  cooldown_millis: 0
+  movement_speed_multiplier: 0.4
+  allow_use_while_casting: false
+  effects {
+    at_millis: 0
+    presentation {
+      # 生人宿主按主手选择抱架片段，与通用格挡同一表现。
+      id: "meridian_basic_techniques:guard_arms"
+      duration: UNTIL_ACTIVE_END
+      start_millis: 0
+    }
+  }
+  effects {
+    at_millis: 400
+    guard {
+      angle { value: 120 unit: DEGREE }
+      damage_multiplier { value: 0.7 unit: RATIO }
+      damage_tags: "meridian:melee"
+      damage_tags: "meridian_basic_techniques:guard_arrows"
+      stamina {
+        joules_per_second: 200
+        joules_per_damage_prevented: 3000
+        break_millis: 1750
+        restart_ratio: 0.2
+      }
+    }
+  }
+  ai_hints {
+    minimum_distance { value: 0 unit: METER }
+    maximum_distance { value: 0 unit: METER }
+    maximum_hp_ratio { value: 1 unit: RATIO }
+    minimum_qi_ratio { value: 0 unit: RATIO }
+    category_weight { value: 1 unit: RATIO }
+    support { role: AI_ROLE_GUARD }
+  }
+  presentation {
+    icon_id: "meridian_basic_techniques:charge"
+    display_name: "陈恪守架"
+    description: "陈恪把直剑横在身前，脚下不挪，只等对面的剑一拍拍落下来。"
+  }
+}
