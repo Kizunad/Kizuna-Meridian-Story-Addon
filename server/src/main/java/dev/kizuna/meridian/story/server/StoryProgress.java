@@ -38,8 +38,11 @@ public final class StoryProgress {
                 || state.getEnteredAt() < state.getStartedAt() || state.getLastEncounter() < 0) {
             throw new IllegalArgumentException("剧情进度损坏：" + id);
         }
-        for (Claim claim : state.getClaimsMap().values()) {
-            if (claim.getEncounter() <= 0 || claim.getEncounter() > state.getLastEncounter()
+        for (var entry : state.getClaimsMap().entrySet()) {
+            Claim claim = entry.getValue();
+            boolean keepsake = id.equals("meridian_story:lone_star_fate") && entry.getKey().equals("cord")
+                    && claim.getChapter().equals("walking");
+            if (claim.getEncounter() <= 0 || !keepsake && claim.getEncounter() > state.getLastEncounter()
                     || claim.getChapter().isEmpty() || claim.getDimension().isEmpty()
                     || !Double.isFinite(claim.getX()) || !Double.isFinite(claim.getY())
                     || !Double.isFinite(claim.getZ())) {
@@ -53,13 +56,7 @@ public final class StoryProgress {
         lines.forEach((id, line) -> {
             if (line.start() == StoryLine.Start.ORIGIN && !progress.containsLines(id)
                     && line.eligible(facts.origin())) {
-                var state = LineState.newBuilder()
-                        .setStartedAt(facts.ticks())
-                        .setEnteredAt(facts.ticks())
-                        .setChapter(line.first())
-                        .setRevision(1)
-                        .build();
-                updated.putLines(id, state);
+                updated.putLines(id, begin(line.first(), facts.ticks()));
             }
         });
         return updated.build();
@@ -77,5 +74,14 @@ public final class StoryProgress {
             state.setEnding(branch.finish());
         }
         return state.build();
+    }
+
+    public static LineState begin(String chapter, long ticks) {
+        return LineState.newBuilder()
+                .setStartedAt(ticks)
+                .setEnteredAt(ticks)
+                .setChapter(chapter)
+                .setRevision(1)
+                .build();
     }
 }

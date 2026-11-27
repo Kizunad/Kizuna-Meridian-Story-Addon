@@ -35,15 +35,30 @@ record RoadScene(ServerPlayer player) {
     }
 
     void readyRoad() {
+        if (!state().getEnding().isEmpty()) {
+            readyRoad(LoneStarRoad.Track.FATE);
+        } else {
+            readyRoad(LoneStarRoad.Track.FOOTMAN);
+        }
+    }
+
+    void readyRoad(LoneStarRoad.Track track) {
         var bodies = new StoryBodies();
         var body = bodies.read(player).orElseThrow();
         var progress = StoryProgress.read(body);
         var crisis = record();
-        long number = Math.max(progress.getRoad().getDraws(), crisis.getRoadRequest()) + 1;
-        while (!LoneStarRoad.selected(player, number)) {
+        var store = new StoryStore();
+        store.ready(player, PhysiqueScene.LONE);
+        var view = store.read(player).orElseThrow();
+        var previous = progress.getRoad();
+        if (track == LoneStarRoad.Track.FOOTMAN) {
+            previous = progress.getFootmanRoad();
+        }
+        long number = Math.max(previous.getDraws(), crisis.getRoadRequest()) + 1;
+        while (!LoneStarRoad.selected(player, number, track, view)) {
             number++;
         }
-        var road = progress.getRoad().toBuilder()
+        var road = previous.toBuilder()
                 .setLastSettlement(Math.max(crisis.getRoadSettledAt(), crisis.getSettledAt()))
                 .setWalkingTicks(LoneStarRoad.DRAW - LoneStarRoad.SECOND)
                 .clearCurrentSegment()
@@ -52,7 +67,13 @@ record RoadScene(ServerPlayer player) {
                 .setDraws(number - 1)
                 .clearWaiting()
                 .build();
-        if (!bodies.write(player, body, progress.toBuilder().setRoad(road).build())) {
+        var prepared = progress.toBuilder();
+        if (track == LoneStarRoad.Track.FOOTMAN) {
+            prepared.setFootmanRoad(road);
+        } else {
+            prepared.setRoad(road);
+        }
+        if (!bodies.write(player, body, prepared.build())) {
             throw new IllegalStateException("未能预置最后一段脚程");
         }
         StoryRaidFixture.roadClock(player, crisis.getOnlineTicks() + LoneStarRoad.REST);

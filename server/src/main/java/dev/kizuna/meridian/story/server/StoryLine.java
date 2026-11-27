@@ -12,7 +12,7 @@ public record StoryLine(String origin, String first, Start start, Map<String, Ch
         }
     }
 
-    public enum Start { ORIGIN, GRAVE_VISIT }
+    public enum Start { ORIGIN, GRAVE_VISIT, ROAD }
 
     public record Facts(String origin, long ticks, double heat, int realm, long opened) { }
 
@@ -21,7 +21,7 @@ public record StoryLine(String origin, String first, Start start, Map<String, Ch
         boolean test(Facts facts, LineState state);
     }
 
-    public enum Kind { RAID, HAND_IN, TALK, ATTACK }
+    public enum Kind { RAID, HAND_IN, TALK, ATTACK, SCENE }
 
     public enum Source { FULL, ROAD }
 
@@ -35,7 +35,7 @@ public record StoryLine(String origin, String first, Start start, Map<String, Ch
 
     public record Trigger(String id, Kind kind, Raid raid, Interaction interaction, Map<String, Branch> branches) { }
 
-    public enum Delivery { OWNER, LEADER_FALL }
+    public enum Delivery { OWNER, LEADER_FALL, SEARCH }
 
     public record Actions(String letter, Delivery delivery, String speech, int goodwill) { }
 

@@ -36,10 +36,12 @@ final class GraveMood extends MobEffect {
         var current = body.getModifiersList().stream().filter(mod -> ID.equals(mod.getId())).findFirst();
         long now = body.getSettledAt().getElapsedMillis();
         var plan = BodyActivity.newBuilder();
-        if (mood == Mood.HOMESICK) {
+        if (mood != Mood.AT_PEACE) {
             if (!player.hasEffect(EFFECT)) {
                 player.addEffect(new MobEffectInstance(EFFECT, MobEffectInstance.INFINITE_DURATION));
-                StoryChat.narrate(player, "story.meridian_story.tomb.sad");
+                if (mood == Mood.HOMESICK) {
+                    StoryChat.narrate(player, "story.meridian_story.tomb.sad");
+                }
             }
             if (current.isPresent() && now - current.get().getStartMillis() < DURATION / REFRESH_DIVISOR) {
                 return;
@@ -55,7 +57,7 @@ final class GraveMood extends MobEffect {
         bodies.apply(player, body, StoryProgress.KEY, plan.build());
     }
 
-    enum Mood { AT_PEACE, HOMESICK }
+    enum Mood { AT_PEACE, HOMESICK, BEREAVED }
 
     private static CapabilityModifier modifier(long now) {
         var start = CurvePoint.newBuilder().setValue(1).build();

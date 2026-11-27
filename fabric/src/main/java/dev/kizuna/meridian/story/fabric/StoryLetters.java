@@ -61,9 +61,16 @@ record StoryLetters(String owner, String line, String reward, Claim claim) {
         var stack = new ItemStack(material(), count);
         String key = nameKey(line, reward);
         stack.set(DataComponents.ITEM_NAME, Component.translatable(key));
-        stack.set(DataComponents.LORE, new ItemLore(List.of(Component.translatable(key + ".lore"))));
+        stack.set(DataComponents.LORE, new ItemLore(List.of(lore(key))));
         stack.set(DataComponents.CUSTOM_DATA, identity());
         return stack;
+    }
+
+    private Component lore(String key) {
+        if (line.equals(FateRoad.LINE) && reward.equals("slip") && claim.hasLoreX()) {
+            return Component.translatable(key + ".lore", claim.getLoreX(), claim.getLoreY(), claim.getLoreZ());
+        }
+        return Component.translatable(key + ".lore");
     }
 
     boolean matches(ItemStack stack) {
@@ -71,6 +78,13 @@ record StoryLetters(String owner, String line, String reward, Claim claim) {
     }
 
     private net.minecraft.world.item.Item material() {
+        if (line.equals(FateRoad.LINE)) {
+            return switch (reward) {
+                case "notebook" -> Items.BOOK;
+                case "cord" -> Items.STRING;
+                default -> Items.PAPER;
+            };
+        }
         // 护送报酬可实际食用，投递仍按同一张具名领取凭据去重。
         if (line.equals(LoneStarRoad.LINE) && reward.equals("loaf")) {
             return Items.BREAD;

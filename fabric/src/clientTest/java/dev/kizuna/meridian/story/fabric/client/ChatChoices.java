@@ -25,6 +25,15 @@ public final class ChatChoices {
     private int x;
     private int y;
     private final List<Component> messages = new ArrayList<>();
+    private final Identifier action;
+
+    public ChatChoices() {
+        this(ACTION);
+    }
+
+    public ChatChoices(Identifier action) {
+        this.action = action;
+    }
 
     public void listen() {
         ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
@@ -33,10 +42,14 @@ public final class ChatChoices {
                 message.getSiblings().stream().map(part -> part.getStyle().getClickEvent())
                         .filter(ClickEvent.Custom.class::isInstance)
                         .map(ClickEvent.Custom.class::cast)
-                        .filter(click -> ACTION.equals(click.id()))
+                        .filter(click -> action.equals(click.id()))
                         .findFirst().ifPresent(click -> first = click);
             }
         });
+    }
+
+    public void clear() {
+        first = null;
     }
 
     public boolean received(Component expected) {

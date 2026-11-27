@@ -20,13 +20,15 @@ public final class StoryChat {
     private static StoryDialogue dialogue;
     private static GraveForge forge;
     private static FallenCultivator roadside;
+    private static FateScenes fate;
 
     private StoryChat() { }
 
-    static void register(StoryDialogue handler, GraveForge smith, FallenCultivator fallen) {
+    static void register(StoryDialogue handler, GraveForge smith, FallenCultivator fallen, FateScenes scenes) {
         dialogue = handler;
         forge = smith;
         roadside = fallen;
+        fate = scenes;
     }
 
     record Selection(String nonce, long revision, int option) {
@@ -53,13 +55,17 @@ public final class StoryChat {
     /** 只接管剧情自己的点击，身份取自当前游戏连接。 */
     public static boolean clicked(ServerPlayer player, ServerboundCustomClickActionPacket packet) {
         boolean forgeClick = GraveForge.ACTION.equals(packet.id());
-        if (!forgeClick && !ACTION.equals(packet.id())) {
+        boolean fateClick = FateScenes.ACTION.equals(packet.id());
+        if (!forgeClick && !fateClick && !ACTION.equals(packet.id())) {
             return false;
         }
         Component reply = Selection.read(packet.payload())
                 .flatMap(selection -> {
                     if (forgeClick) {
                         return forge.choose(player, selection);
+                    }
+                    if (fateClick) {
+                        return fate.choose(player, selection);
                     }
                     return dialogue.choose(player, selection).or(() -> roadside.choose(player, selection));
                 })

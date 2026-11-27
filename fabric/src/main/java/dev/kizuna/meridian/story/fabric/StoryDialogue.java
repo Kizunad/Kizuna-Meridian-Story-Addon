@@ -95,6 +95,10 @@ final class StoryDialogue {
                     continue;
                 }
                 var choice = new Choice(id, state, line, trigger, Action.BRANCH);
+                if (id.equals(LoneStarRoad.LINE) && trigger.id().equals("escort")
+                        && FateRoad.grade(view.progress()) == FateRoad.Grade.DRAWN) {
+                    continue;
+                }
                 if (atRecipient(view, actor, trigger, player)) {
                     addChoice(choices, player, choice);
                 } else if (campReplacement(view, player, actor, choice)) {
@@ -132,6 +136,10 @@ final class StoryDialogue {
         var first = choices.getFirst();
         var chapter = first.definition().chapters().get(first.state().getChapter());
         StoryChat.narrate(player, chapter.prompt());
+        if (first.line().equals(LoneStarRoad.LINE) && first.state().getChapter().equals("lodge")) {
+            store.read(player).filter(view -> FateRoad.grade(view.progress()) == FateRoad.Grade.DRAWN)
+                    .ifPresent(ignored -> StoryChat.narrate(player, FateScenes.PREFIX + "fear"));
+        }
         if (!chapter.greeting().isEmpty()) {
             HumanoidSpeech.SPOKE.invoker().spoke(actor, player, Component.translatable(chapter.greeting()));
         }
@@ -257,6 +265,10 @@ final class StoryDialogue {
             if (!branch.actions().speech().isEmpty()) {
                 HumanoidSpeech.SPOKE.invoker().spoke(actor, player, Component.translatable(branch.actions().speech()));
             }
+            if (choice.line().equals(LoneStarRoad.LINE) && choice.trigger().id().equals("escort")) {
+                store.read(player).filter(view -> FateRoad.grade(view.progress()) == FateRoad.Grade.STILLED)
+                        .ifPresent(ignored -> StoryChat.narrate(player, FateScenes.PREFIX + "together"));
+            }
         }
         return committed;
     }
@@ -307,6 +319,10 @@ final class StoryDialogue {
 
     private static boolean valid(StoryStore.View view, LivingEntity actor, ServerPlayer player, Choice choice) {
         var state = view.progress().getLinesMap().get(choice.line());
+        if (choice.line().equals(LoneStarRoad.LINE) && choice.trigger().id().equals("escort")
+                && FateRoad.grade(view.progress()) == FateRoad.Grade.DRAWN) {
+            return false;
+        }
         return choice.state().equals(state) && near(player, actor)
                 && (atRecipient(view, actor, choice.trigger(), player)
                 || choice.action() == Action.REPLACE && campReplacement(view, player, actor, choice))

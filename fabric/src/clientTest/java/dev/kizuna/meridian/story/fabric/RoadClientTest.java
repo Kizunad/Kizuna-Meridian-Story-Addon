@@ -35,7 +35,7 @@ public final class RoadClientTest implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        if ("lonestar".equals(System.getProperty("meridian.story.scene"))) {
+        if (java.util.Set.of("lonestar", "footman").contains(System.getProperty("meridian.story.scene", ""))) {
             choices.listen();
             ClientTickEvents.END_CLIENT_TICK.register(this::tick);
         }
@@ -95,7 +95,7 @@ public final class RoadClientTest implements ClientModInitializer {
                 commands.performPrefixedCommand(source, "time set day");
                 commands.performPrefixedCommand(source, "weather clear");
                 commands.performPrefixedCommand(source, "meridian debug origin set " + player.getScoreboardName()
-                        + " " + LoneStarRoad.LINE);
+                        + " " + PhysiqueScene.ORDINARY);
                 player.setGameMode(GameType.SURVIVAL);
                 depart(scene);
                 yield Stage.SCOUT;

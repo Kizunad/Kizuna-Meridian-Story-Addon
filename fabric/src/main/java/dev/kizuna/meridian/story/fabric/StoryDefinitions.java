@@ -50,7 +50,7 @@ final class StoryDefinitions {
                             && !CrisisEncounters.feudUses(raid.feud(), raid.party())) {
                         throw new IllegalArgumentException("来犯引用无效 " + raid);
                     }
-                } else {
+                } else if (trigger.interaction() != null) {
                     String recipient = trigger.interaction().recipient().id();
                     if (!BuiltInRegistries.ENTITY_TYPE.containsKey(Identifier.parse(recipient))) {
                         throw new IllegalArgumentException("未知角色 " + recipient);

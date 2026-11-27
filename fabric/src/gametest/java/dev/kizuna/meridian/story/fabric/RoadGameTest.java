@@ -3,6 +3,7 @@ package dev.kizuna.meridian.story.fabric;
 import dev.kizuna.meridian.humanoid.fabric.CrisisEncounters;
 import dev.kizuna.meridian.humanoid.fabric.StoryRaidFixture;
 import dev.kizuna.meridian.story.protocol.pb.StoryMessages.RoadTravel;
+import dev.kizuna.meridian.story.server.StoryProgress;
 import java.util.UUID;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.ChatFormatting;
@@ -19,6 +20,7 @@ public final class RoadGameTest {
     private static final int AWAY = 128;
     private static final int SPACING = 112;
     private static final int REJOIN = 5;
+    private static final int LEGACY_TICKET = 17;
 
     @GameTest
     public void onlyWalkingNewSegmentsCounts(GameTestHelper test) {
@@ -101,6 +103,44 @@ public final class RoadGameTest {
 
     private enum Route { ESCORT, SOLO }
 
+    @GameTest(maxTicks = TIMEOUT)
+    public void legacyWaitingTicketSurvivesRejoinAndDeliversOnce(GameTestHelper test) {
+        var run = new Journey(test, 4);
+        var sequence = run.start();
+        sequence.thenExecute(() -> {
+            var player = run.owner.player();
+            var bodies = new StoryBodies();
+            var body = bodies.read(player).orElseThrow();
+            var oldRoad = RoadTravel.newBuilder()
+                    .setWaiting(true /* waiting */)
+                    .setDraws(LEGACY_TICKET)
+                    .build();
+            var progress = StoryProgress.read(body);
+            var oldLine = StoryProgress.begin("walk", 0);
+            var saved = progress.toBuilder()
+                    .putLines(LoneStarRoad.LINE, oldLine)
+                    .setRoad(oldRoad)
+                    .clearFootmanRoad()
+                    .build();
+            test.assertTrue(bodies.write(player, body, saved), "未能保存旧脚夫签");
+            StoryRaidFixture.roadClock(player, LoneStarRoad.REST);
+            run.owner.close();
+        }).thenExecuteAfter(REJOIN, run::rejoin)
+                .thenWaitUntil(() -> test.assertTrue(
+                        CrisisEncounters.current(run.scene.player()).isPresent(), "等待重登生人记录"))
+                .thenExecute(() -> run.scene.ground(run.trail))
+                .thenWaitUntil(() -> {
+                    var pending = run.scene.record().getPending();
+                    if (!pending.getArrived() && run.scene.player().level().getGameTime() % SECOND == 1) {
+                        run.scene.walk();
+                    }
+                    test.assertTrue(pending.getRoadRequest() == LEGACY_TICKET
+                            && LoneStarRoad.SCOUT.equals(pending.getParty()), "等待原脚夫签号");
+                }).thenExecute(() -> run.scene.win())
+                .thenWaitUntil(() -> test.assertTrue(run.scene.delivered("waybill"), "等待旧案唯一驿记"))
+                .thenExecute(() -> run.owner.close()).thenSucceed();
+    }
+
     private static final class Journey {
         private final GameTestHelper test;
         private final UUID id;
@@ -123,7 +163,8 @@ public final class RoadGameTest {
 
         GameTestSequence start() {
             return PhysiqueGameTest.choose(test, owner, PhysiqueScene.LONE)
-                    .thenWaitUntil(() -> test.assertTrue(scene.state().getChapter().equals("walk"), "尚未独行"))
+                    .thenWaitUntil(() -> test.assertTrue(owner.state(FateRoad.LINE).getChapter().equals("reading"),
+                            "等待孤星批命线开章"))
                     .thenExecute(() -> scene.ground(trail));
         }
 
@@ -211,7 +252,7 @@ public final class RoadGameTest {
                         String ending = escort ? "escorted" : "passed";
                         test.assertTrue(scene.state().getEnding().equals(ending), "结局串线");
                     });
-            encounter(sequence, LoneStarRoad.SCOUT, trail.south(AWAY));
+            encounter(sequence, FateRoad.STRAY, trail.south(AWAY));
             sequence.thenExecute(owner::close).thenSucceed();
         }
 

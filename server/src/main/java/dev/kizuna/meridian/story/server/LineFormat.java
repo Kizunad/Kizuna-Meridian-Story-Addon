@@ -132,6 +132,10 @@ public final class LineFormat {
         json.getAsJsonObject("branches").entrySet().forEach(entry -> branches.put(entry.getKey(),
                 branch(entry.getValue().getAsJsonObject(), type, claims)));
         JsonObject params = json.getAsJsonObject("params");
+        if (type.equals("scene")) {
+            require(branches.keySet().equals(Set.of("accepted")), "现场回执须有 accepted 分支");
+            return new Trigger(id, Kind.SCENE, null, null, Map.copyOf(branches));
+        }
         if (type.equals("raid_settled")) {
             require(branches.keySet().equals(ENDINGS), "来犯要有赢逃输三个分支");
             String feud = text(params, "feud");

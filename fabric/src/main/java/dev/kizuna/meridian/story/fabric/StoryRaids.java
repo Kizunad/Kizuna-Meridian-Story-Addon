@@ -80,6 +80,9 @@ final class StoryRaids {
         RaidReceipt receipt = view.crisis().getReceiptsMap().get(key);
         var raid = wait.trigger().raid();
         if (receipt != null) {
+            if (!matchesScene(view, wait, receipt)) {
+                return;
+            }
             if (receipt.getRoad() != (raid.source() == StoryLine.Source.ROAD)
                     || !receipt.getPlayer().equals(player.getStringUUID()) || !receipt.getParty().equals(raid.party())
                     || !receipt.getFeud().equals(raid.feud()) || !wait.trigger().branches().containsKey(
@@ -96,6 +99,17 @@ final class StoryRaids {
                     .build();
             CrisisEncounters.watch(player, key, request);
         }
+    }
+
+    private static boolean matchesScene(StoryStore.View view, Wait wait, RaidReceipt receipt) {
+        if (!wait.line().equals(FateRoad.LINE) || !receipt.getOutcome().equals("win")) {
+            return true;
+        }
+        var fate = view.progress().getFate();
+        if (receipt.getParty().equals(FateRoad.HIRED)) {
+            return fate.getHired().equals(receipt.getLeader()) && fate.getRequest() == receipt.getRoadRequest();
+        }
+        return fate.getActor().equals(receipt.getLeader());
     }
 
     private void consume(ServerPlayer player, Wait wait, RaidReceipt receipt) {

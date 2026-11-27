@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "origin": "meridian_story:lone_star",
+  "start": "road",
   "first": "walk",
   "chapters": {
     "walk": {

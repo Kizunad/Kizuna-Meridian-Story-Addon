@@ -7,6 +7,7 @@ import dev.kizuna.meridian.human.server.HumanPhysique;
 import dev.kizuna.meridian.origin.fabric.Origins;
 import dev.kizuna.meridian.protocol.pb.BodyMessages.BodySnapshot;
 import dev.kizuna.meridian.story.fabric.StoryOrigins.Trait;
+import dev.kizuna.meridian.story.server.StoryProgress;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,11 +36,9 @@ public final class GrittedCounter extends MobEffect {
     private static final Identifier ID = Identifier.parse("meridian_story:gritted_counter");
     private static final int COLOR = 0xb54522;
     private static final int LEVEL = 2;
-    private static final double SPEED = 0.10;
     private static final double INJURED = 0.35;
     private static final double RECOVERED = 0.50;
     private static final int SECOND = 20;
-    private static final int DURATION = 8 * SECOND;
     private static final int COOLDOWN = 90 * SECOND;
     static final Holder<MobEffect> EFFECT = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT, ID,
             new GrittedCounter());
@@ -47,9 +46,6 @@ public final class GrittedCounter extends MobEffect {
 
     private GrittedCounter() {
         super(MobEffectCategory.BENEFICIAL, COLOR);
-        // 原版按等级乘属性数值，二级一共加一成攻击速度。
-        addAttributeModifier(Attributes.ATTACK_SPEED, ID, SPEED / LEVEL,
-                AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
     }
 
     static void initialize() {
@@ -122,6 +118,7 @@ public final class GrittedCounter extends MobEffect {
         }
 
         private void stop(ServerPlayer player) {
+            player.getAttribute(Attributes.ATTACK_SPEED).removeModifier(ID);
             // 只清截止时刻；冷却与回半血的门槛继续随身体保存。
             var id = player.getUUID();
             if (active.contains(id)) {
@@ -155,8 +152,16 @@ public final class GrittedCounter extends MobEffect {
                         player.addEffect(new MobEffectInstance(EFFECT, ticks, LEVEL - 1, false /* ambient */,
                                 false /* visible */, true /* showIcon */));
                     }
+                    var speed = player.getAttribute(Attributes.ATTACK_SPEED);
+                    var modifier = new AttributeModifier(ID, FateRoad.grade(StoryProgress.read(body)).speed,
+                            AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
+                    if (!modifier.equals(speed.getModifier(ID))) {
+                        speed.removeModifier(ID);
+                        speed.addTransientModifier(modifier);
+                    }
                 } else {
                     active.remove(id);
+                    player.getAttribute(Attributes.ATTACK_SPEED).removeModifier(ID);
                     player.removeEffect(EFFECT);
                 }
                 if (traits.isEmpty()) {
@@ -181,8 +186,10 @@ public final class GrittedCounter extends MobEffect {
                 .setEnduringLimbs(traits.contains(Trait.ENDURING_LIMBS))
                 .setSlowOpening(traits.contains(Trait.SLOW_OPENING));
         if (!traits.contains(Trait.GRITTED_COUNTER)) {
-            return state.clearBurstUntilTick().clearReadyAtTick().clearAwaitingRecovery().build();
+            return state.clearArmBurst().clearBurstUntilTick().clearReadyAtTick().clearAwaitingRecovery().build();
         }
+        var grade = FateRoad.grade(StoryProgress.read(body));
+        state.setArmBurst(grade.power);
         if (!player.isAlive() || body.getVitality().getDead()) {
             return state.clearBurstUntilTick().build();
         }
@@ -197,7 +204,7 @@ public final class GrittedCounter extends MobEffect {
                 state.clearBurstUntilTick();
             }
         } else if (hp <= maximum * INJURED && !before.getAwaitingRecovery() && now >= before.getReadyAtTick()) {
-            state.setBurstUntilTick(now + DURATION)
+            state.setBurstUntilTick(now + grade.seconds * SECOND)
                     .setReadyAtTick(now + COOLDOWN)
                     .setAwaitingRecovery(true /* awaitingRecovery */);
         }

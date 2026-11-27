@@ -9,6 +9,21 @@ message Progress {
   GraveKeeper grave = 3;
   RoadTravel road = 4;
   Roadside roadside = 5;
+  FateJourney fate = 6;
+  RoadTravel footman_road = 7;
+}
+
+// 命格事件的演员一经派出便沿用原 UUID，等待区块加载时不会另派一人。
+message FateJourney {
+  string actor = 1;
+  optional int64 gate = 2;
+  optional int64 temple = 3;
+  bool ambushed = 4;
+  bool blood = 5;
+  int64 grieving_until = 6;
+  string deceased = 7;
+  int64 request = 8;
+  string hired = 9;
 }
 
 // 路段按水平网格记忆；存档保存本签和进度，离线时间不折成脚程。
@@ -44,6 +59,9 @@ message Claim {
   double z = 6;
   bool spent = 7;
   bool awaiting_delivery = 8;
+  optional int64 lore_x = 9;
+  optional int64 lore_y = 10;
+  optional int64 lore_z = 11;
 }
 
 // 每名守墓人的剑号、开局投递和回访事实；祖冢位置由主世界单独登记。

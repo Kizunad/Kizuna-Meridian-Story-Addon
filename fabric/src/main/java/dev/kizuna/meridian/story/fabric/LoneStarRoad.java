@@ -3,6 +3,8 @@ package dev.kizuna.meridian.story.fabric;
 import dev.kizuna.meridian.humanoid.fabric.CrisisEncounters;
 import dev.kizuna.meridian.humanoid.server.CrisisRules;
 import dev.kizuna.meridian.story.protocol.pb.StoryMessages.RoadTravel;
+import dev.kizuna.meridian.story.server.StoryLine;
+import dev.kizuna.meridian.story.server.StoryProgress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -34,6 +36,7 @@ final class LoneStarRoad {
     private static final int CHANCE = 40;
     private static final int PERCENT = 100;
     private static final long DRAW_SALT = 0x9E3779B97F4A7C15L;
+    private static final long FOOTMAN_SALT = ~DRAW_SALT;
     private final Map<UUID, Step> previous = new HashMap<>();
     private final StoryStore store;
 
@@ -55,9 +58,6 @@ final class LoneStarRoad {
 
     private void camp(ServerPlayer player, BlockPos pos) {
         boolean changed = store.change(player, view -> {
-            if (!StoryOrigins.roadTrouble(view.facts().origin())) {
-                return view.progress();
-            }
             var camp = view.progress().getRoad().toBuilder().setCamp(pos.asLong()).build();
             return view.progress().toBuilder().setRoad(camp).build();
         });
@@ -90,9 +90,9 @@ final class LoneStarRoad {
         }
     }
 
-    void tick(ServerPlayer player, StoryStore.View view) {
+    void tick(ServerPlayer player, StoryStore.View view, StoryLine footman) {
         // 重登、换维或乘骑后第一点只作基线，避免把位置跳变算成行路。
-        if (!StoryOrigins.roadTrouble(view.facts().origin()) || player.level().dimension() != Level.OVERWORLD
+        if (player.level().dimension() != Level.OVERWORLD
                 || !player.isAlive() || player.isSpectator()) {
             if (previous.containsKey(player.getUUID()) || view.progress().hasRoad()) {
                 leave(player);
@@ -102,18 +102,6 @@ final class LoneStarRoad {
         RoadFootman.tick(player, view);
         var road = view.progress().getRoad();
         long last = Math.max(view.crisis().getRoadSettledAt(), view.crisis().getSettledAt());
-        if (last != road.getLastSettlement()) {
-            var reset = road.toBuilder()
-                    .setLastSettlement(last)
-                    .clearWalkingTicks()
-                    .clearWaiting()
-                    .clearCurrentSegment()
-                    .clearSegmentTicks()
-                    .build();
-            save(player, road, reset);
-            previous.remove(player.getUUID());
-            return;
-        }
         if (player.isCreative() || !player.onGround() || player.isPassenger() || player.isInWater()
                 || player.getAbilities().flying || view.crisis().hasPending() || view.facts().ticks() - last < REST
                 || !outside(player, road)) {
@@ -123,7 +111,23 @@ final class LoneStarRoad {
         var step = Step.sample(player);
         var old = previous.put(player.getUUID(), step);
         if (step.followed(old)) {
-            walk(player, view, road);
+            long tile = BlockPos.asLong(Math.floorDiv(player.getBlockX(), TILE), 0,
+                    Math.floorDiv(player.getBlockZ(), TILE));
+            boolean lone = StoryOrigins.roadTrouble(view.facts().origin());
+            var progress = view.progress();
+            var state = progress.getLinesMap().get(LINE);
+            boolean legacy = lone && state != null && !progress.hasFootmanRoad() && road.getWaiting();
+            String party = party(player, view);
+            if (footman != null && (state == null || state.getEnding().isEmpty()
+                    && (state.getChapter().equals("walk") || party.equals(PURSUIT)))) {
+                Track track = legacy ? Track.LEGACY : Track.FOOTMAN;
+                if (draw(player, view, tile, new Request(track, party, footman))) {
+                    return;
+                }
+            }
+            if (lone) {
+                draw(player, view, tile, new Request(Track.FATE, FateRoad.party(view), footman));
+            }
         }
     }
 
@@ -151,15 +155,30 @@ final class LoneStarRoad {
         return dx * dx + dz * dz <= RADIUS * RADIUS;
     }
 
-    private void walk(ServerPlayer player, StoryStore.View view, RoadTravel before) {
-        long tile = BlockPos.asLong(Math.floorDiv(player.getBlockX(), TILE), 0,
-                Math.floorDiv(player.getBlockZ(), TILE));
-        var advanced = credit(before, tile);
-        if (advanced.getWalkingTicks() == before.getWalkingTicks()) {
-            if (!advanced.equals(before)) {
-                save(player, before, advanced);
-            }
-            return;
+    enum Track { FOOTMAN, LEGACY, FATE }
+
+    private record Request(Track track, String party, StoryLine footman) { }
+
+    private boolean draw(ServerPlayer player, StoryStore.View view, long tile, Request request) {
+        Track track = request.track();
+        var before = view.progress().getRoad();
+        if (track == Track.FOOTMAN) {
+            before = view.progress().getFootmanRoad();
+        }
+        long last = Math.max(view.crisis().getRoadSettledAt(), view.crisis().getSettledAt());
+        var base = before;
+        if (last != before.getLastSettlement()) {
+            base = before.toBuilder()
+                    .setLastSettlement(last)
+                    .clearWalkingTicks()
+                    .clearCurrentSegment()
+                    .clearSegmentTicks()
+                    .build();
+        }
+        var advanced = credit(base, tile);
+        if (!advanced.getWaiting() && advanced.getWalkingTicks() == base.getWalkingTicks()) {
+            save(player, before, advanced, track);
+            return false;
         }
         RoadTravel next;
         if (!before.getWaiting() && advanced.getWalkingTicks() >= DRAW) {
@@ -167,29 +186,58 @@ final class LoneStarRoad {
             long draw = Math.max(before.getDraws(), view.crisis().getRoadRequest()) + 1;
             next = advanced.toBuilder()
                     .setDraws(draw)
-                    .setWaiting(selected(player, draw))
+                    .setWaiting(selected(player, draw, track, view))
                     .clearWalkingTicks()
                     .build();
         } else {
             next = advanced;
         }
-        if (!save(player, before, next) || !next.getWaiting()) {
-            return;
+        if (!before.equals(next) && !save(player, before, next, track) || !next.getWaiting()) {
+            return false;
         }
-        if (view.crisis().getRoadRequest() == next.getDraws()
-                || CrisisEncounters.requestRoad(player, party(player, view), next.getDraws())) {
-            var accepted = next.toBuilder()
-                    .clearWaiting()
-                    .clearWalkingTicks()
-                    .build();
-            save(player, next, accepted);
+        long ticket = Math.incrementExact(view.crisis().getRoadRequest());
+        if (track == Track.LEGACY) {
+            ticket = next.getDraws();
+            if (ticket <= view.crisis().getRoadRequest()) {
+                var consumed = next.toBuilder().clearWaiting().build();
+                save(player, next, consumed, track);
+                return true;
+            }
         }
+        if (!CrisisEncounters.requestRoad(player, request.party(), ticket)) {
+            return true;
+        }
+        if (track != Track.FATE && !view.progress().containsLines(LINE)) {
+            store.change(player, current -> {
+                var state = StoryProgress.begin(request.footman().first(), current.facts().ticks());
+                return current.progress().toBuilder().putLines(LINE, state).build();
+            });
+        }
+        if (request.party().equals(FateRoad.HIRED)) {
+            var pending = CrisisEncounters.current(player).orElseThrow().getPending();
+            store.change(player, current -> {
+                var progress = current.progress();
+                var fate = progress.getFate().toBuilder()
+                        .setHired(pending.getLeader())
+                        .setRequest(pending.getRoadRequest())
+                        .build();
+                return progress.toBuilder().setFate(fate).build();
+            });
+        }
+        var accepted = next.toBuilder().clearWaiting().clearWalkingTicks().build();
+        save(player, next, accepted, track);
+        return true;
     }
 
-    static boolean selected(ServerPlayer player, long draw) {
+    static boolean selected(ServerPlayer player, long draw, Track track, StoryStore.View view) {
+        int chance = CHANCE;
+        if (track == Track.FATE) {
+            chance = FateRoad.chance(view);
+        }
         var id = player.getUUID();
         long seed = player.level().getSeed() ^ id.getMostSignificantBits() ^ id.getLeastSignificantBits();
-        return RandomSource.create(seed + draw * DRAW_SALT).nextInt(PERCENT) < CHANCE;
+        long salt = track == Track.FOOTMAN ? FOOTMAN_SALT : DRAW_SALT;
+        return RandomSource.create(seed + draw * salt).nextInt(PERCENT) < chance;
     }
 
     static RoadTravel credit(RoadTravel road, long tile) {
@@ -219,9 +267,15 @@ final class LoneStarRoad {
                 .build();
     }
 
-    private boolean save(ServerPlayer player, RoadTravel before, RoadTravel next) {
+    private boolean save(ServerPlayer player, RoadTravel before, RoadTravel next, Track track) {
         return store.change(player, view -> {
             var progress = view.progress();
+            if (track == Track.FOOTMAN) {
+                if (!progress.getFootmanRoad().equals(before)) {
+                    return progress;
+                }
+                return progress.toBuilder().setFootmanRoad(next).build();
+            }
             if (!progress.getRoad().equals(before)) {
                 return progress;
             }

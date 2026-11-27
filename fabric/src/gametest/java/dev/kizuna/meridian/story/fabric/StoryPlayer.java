@@ -128,9 +128,13 @@ record StoryPlayer(ServerPlayer player, RecordingConnection connection) implemen
     }
 
     List<Invitation> offers() {
+        return offers(StoryChat.ACTION);
+    }
+
+    List<Invitation> offers(Identifier action) {
         return chat().stream().map(message -> message.getSiblings().stream()
                         .filter(part -> part.getStyle().getClickEvent() instanceof ClickEvent.Custom click
-                                && click.id().equals(StoryChat.ACTION))
+                                && click.id().equals(action))
                         .toList())
                 .filter(parts -> !parts.isEmpty())
                 .map(Invitation::new)

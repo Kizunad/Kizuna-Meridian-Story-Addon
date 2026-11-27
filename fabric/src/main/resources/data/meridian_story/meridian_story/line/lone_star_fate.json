@@ -1,0 +1,230 @@
+{
+  "version": 1,
+  "origin": "meridian_story:lone_star",
+  "first": "reading",
+  "chapters": {
+    "reading": {
+      "when": [],
+      "on": [
+        {
+          "id": "pay",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "next": "escort"
+            }
+          }
+        },
+        {
+          "id": "leave",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "next": "escort"
+            }
+          }
+        },
+        {
+          "id": "strike",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "next": "escort"
+            }
+          }
+        }
+      ]
+    },
+    "escort": {
+      "when": [],
+      "on": [
+        {
+          "id": "accompany",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "next": "walking"
+            }
+          }
+        }
+      ]
+    },
+    "walking": {
+      "when": [],
+      "on": [
+        {
+          "id": "gate",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "next": "paid_hand"
+            }
+          }
+        },
+        {
+          "id": "dismiss",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "next": "paid_hand"
+            }
+          }
+        },
+        {
+          "id": "death",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "next": "paid_hand"
+            }
+          }
+        }
+      ]
+    },
+    "paid_hand": {
+      "when": [],
+      "on": [
+        {
+          "type": "raid_settled",
+          "params": {
+            "party": "meridian_story:hired_deserter",
+            "feud": "",
+            "source": "road"
+          },
+          "branches": {
+            "win": {
+              "next": "search",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "slip",
+                    "at": "search"
+                  }
+                }
+              ]
+            },
+            "escape": {
+              "stay": true
+            },
+            "loss": {
+              "stay": true
+            }
+          }
+        }
+      ]
+    },
+    "search": {
+      "when": [],
+      "on": [
+        {
+          "id": "search",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "next": "directions"
+            }
+          }
+        }
+      ]
+    },
+    "directions": {
+      "when": [],
+      "on": [
+        {
+          "id": "follow",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "next": "temple"
+            }
+          }
+        }
+      ]
+    },
+    "temple": {
+      "when": [],
+      "on": [
+        {
+          "type": "raid_settled",
+          "params": {
+            "party": "meridian_story:temple_master",
+            "feud": "",
+            "source": "road"
+          },
+          "branches": {
+            "win": {
+              "next": "victory",
+              "do": [
+                {
+                  "type": "letter",
+                  "params": {
+                    "id": "notebook",
+                    "at": "search"
+                  }
+                }
+              ]
+            },
+            "escape": {
+              "stay": true
+            },
+            "loss": {
+              "stay": true
+            }
+          }
+        }
+      ]
+    },
+    "victory": {
+      "when": [],
+      "on": [
+        {
+          "id": "take",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "next": "unread"
+            }
+          }
+        }
+      ]
+    },
+    "unread": {
+      "when": [],
+      "on": [
+        {
+          "id": "read",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "next": "decision"
+            }
+          }
+        }
+      ]
+    },
+    "decision": {
+      "when": [],
+      "on": [
+        {
+          "id": "drawn",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "finish": "drawn"
+            }
+          }
+        },
+        {
+          "id": "stilled",
+          "type": "scene",
+          "branches": {
+            "accepted": {
+              "finish": "stilled"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

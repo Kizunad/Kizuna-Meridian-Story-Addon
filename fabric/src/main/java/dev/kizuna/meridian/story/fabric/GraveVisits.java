@@ -74,7 +74,9 @@ final class GraveVisits {
         if (!ORIGIN.equals(view.facts().origin()) || !player.isAlive() || player.isSpectator()) {
             if (progress.hasGrave()) {
                 leave(player);
-                GraveMood.reconcile(player, bodies, view.body(), GraveMood.Mood.AT_PEACE);
+            }
+            if (progress.hasGrave() || progress.getFate().getGrievingUntil() > 0) {
+                reconcileMood(player, view, GraveMood.Mood.AT_PEACE);
             }
             return;
         }
@@ -108,7 +110,7 @@ final class GraveVisits {
         if (now - grave.getLastVigil() >= ABSENCE && (previous == null || clock - previous.firstTick() < VIGIL)) {
             mood = GraveMood.Mood.HOMESICK;
         }
-        GraveMood.reconcile(player, bodies, view.body(), mood);
+        reconcileMood(player, view, mood);
         if (!inside(player.level().dimension(), player.blockPosition(), stone)) {
             leave(player);
             return;
@@ -133,6 +135,14 @@ final class GraveVisits {
             return;
         }
         visit(player, view, site, stay, enteredOnline);
+    }
+
+    private void reconcileMood(ServerPlayer player, StoryStore.View view, GraveMood.Mood grave) {
+        var mood = grave;
+        if (grave == GraveMood.Mood.AT_PEACE && view.progress().getFate().getGrievingUntil() > view.facts().ticks()) {
+            mood = GraveMood.Mood.BEREAVED;
+        }
+        GraveMood.reconcile(player, bodies, view.body(), mood);
     }
 
     static boolean inside(net.minecraft.resources.ResourceKey<Level> dimension, BlockPos feet, BlockPos stone) {

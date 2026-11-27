@@ -33,6 +33,7 @@ public final class StoryFabric implements ModInitializer {
     private LoneStarRoad road;
     private FallenCultivator roadside;
     private StoryDialogue dialogue;
+    private FateScenes fate;
 
     @Override
     public void onInitialize() {
@@ -51,7 +52,9 @@ public final class StoryFabric implements ModInitializer {
         raids = new StoryRaids(store);
         dialogue = new StoryDialogue(store);
         var forge = new GraveForge(store);
-        StoryChat.register(dialogue, forge, roadside);
+        fate = new FateScenes(store);
+        fate.register();
+        StoryChat.register(dialogue, forge, roadside, fate);
         registerResources();
         Origins.CHOSEN.register((player, origin) -> ready(player, origin.id().toString()));
         Origins.READY.register((player, origin) ->
@@ -68,6 +71,7 @@ public final class StoryFabric implements ModInitializer {
         ServerPlayerEvents.LEAVE.register(departure, player -> {
             shown.remove(player.getUUID());
             forge.leave(player);
+            fate.leave(player);
             road.leave(player);
             roadside.leave(player);
             graves.leave(player);
@@ -110,6 +114,7 @@ public final class StoryFabric implements ModInitializer {
     private void load(MinecraftServer server) {
         lines = StoryDefinitions.load(server);
         dialogue.clear();
+        fate.definitions(lines.get(FateRoad.LINE));
         server.getPlayerList().getPlayers().forEach(this::tick);
     }
 
@@ -163,17 +168,16 @@ public final class StoryFabric implements ModInitializer {
         }
         var view = initial.get();
         graves.tick(player, view);
-        road.tick(player, view);
+        road.tick(player, view, lines.get(LoneStarRoad.LINE));
         roadside.tick(player, view);
+        fate.tick(player, view);
         StoryLetters.deliverPending(player, store, view.progress());
         showChapters(player, view);
         if (lines.entrySet().stream().anyMatch(entry -> entry.getValue().eligible(view.facts().origin())
                 && entry.getValue().start() == StoryLine.Start.ORIGIN
                 && !view.progress().containsLines(entry.getKey()))) {
             store.change(player, current -> StoryProgress.start(current.progress(), lines, current.facts()));
-            store.read(player).ifPresent(current -> raids.tick(player, current, lines));
-        } else {
-            raids.tick(player, view, lines);
         }
+        store.read(player).ifPresent(current -> raids.tick(player, current, lines));
     }
 }
