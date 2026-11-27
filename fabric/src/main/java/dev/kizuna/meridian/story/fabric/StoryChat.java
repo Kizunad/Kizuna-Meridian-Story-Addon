@@ -22,6 +22,7 @@ public final class StoryChat {
     private static FallenCultivator roadside;
     private static FateScenes fate;
     private static RivalVisit rival;
+    static MidnightMarket market;
 
     private StoryChat() { }
 
@@ -59,11 +60,15 @@ public final class StoryChat {
     public static boolean clicked(ServerPlayer player, ServerboundCustomClickActionPacket packet) {
         boolean forgeClick = GraveForge.ACTION.equals(packet.id());
         boolean fateClick = FateScenes.ACTION.equals(packet.id());
-        if (!forgeClick && !fateClick && !ACTION.equals(packet.id())) {
+        boolean marketClick = MidnightMarket.ACTION.equals(packet.id());
+        if (!marketClick && !forgeClick && !fateClick && !ACTION.equals(packet.id())) {
             return false;
         }
         Component reply = Selection.read(packet.payload())
                 .flatMap(selection -> {
+                    if (marketClick) {
+                        return market.choose(player, selection);
+                    }
                     if (forgeClick) {
                         return forge.choose(player, selection);
                     }

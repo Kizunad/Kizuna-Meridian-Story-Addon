@@ -39,6 +39,7 @@
     "fabricloader": ">=0.20.1",
     "fabric-api": "*",
     "meridian_framework": "*",
+    "meridian_undead": "*",
     "meridian_currency": "*",
     "meridian_human_host": "*",
     "meridian_vanilla_healing": "*",

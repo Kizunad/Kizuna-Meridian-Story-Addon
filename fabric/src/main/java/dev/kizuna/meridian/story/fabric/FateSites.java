@@ -69,6 +69,15 @@ final class FateSites {
 
     static Optional<BlockPos> temple(ServerPlayer player) {
         var level = player.level();
+        var nearby = TempleMarkets.get(level).nearby(player.blockPosition());
+        if (nearby.isPresent()) {
+            return nearby.filter(altar -> TempleMarkets.intact(level, altar));
+        }
+        return placeTemple(player, base -> true);
+    }
+
+    static Optional<BlockPos> placeTemple(ServerPlayer player, java.util.function.Predicate<BlockPos> courtyard) {
+        var level = player.level();
         // 先核整座庙的净空与地基；复用同一模板，落地完成才签发命帖。
         var template = level.getStructureManager().get(TEMPLE).orElseThrow();
         var cells = ((GraveTemplateAccessor) template).meridianStory$palettes().getFirst().blocks();
@@ -81,22 +90,26 @@ final class FateSites {
             }
             var base = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, column)
                     .offset(-HALF_TEMPLE, 0, -HALF_TEMPLE);
-            for (var cell : cells) {
-                level.getChunkAt(base.offset(cell.pos()));
+            if (!courtyard.test(base)) {
+                continue;
             }
-            if (cells.stream().anyMatch(cell -> !clear(level, base.offset(cell.pos()), cell.pos().getY()))) {
+            if (cells.stream().anyMatch(cell -> !clear(player, base.offset(cell.pos()), cell.pos().getY()))) {
                 continue;
             }
             for (var cell : cells) {
                 level.setBlock(base.offset(cell.pos()), cell.state(), Block.UPDATE_ALL);
             }
-            return Optional.of(base.offset(ALTAR));
+            var altar = base.offset(ALTAR);
+            TempleMarkets.get(level).register(altar);
+            return Optional.of(altar);
         }
         return Optional.empty();
     }
 
-    private static boolean clear(ServerLevel level, BlockPos pos, int layer) {
+    private static boolean clear(ServerPlayer player, BlockPos pos, int layer) {
+        var level = player.level();
         if (!level.isLoaded(pos) || !level.getWorldBorder().isWithinBounds(pos)
+                || level.getServer().isUnderSpawnProtection(level, pos, player)
                 || !level.structureManager().getAllStructuresAt(pos).isEmpty() || level.getBlockEntity(pos) != null) {
             return false;
         }
@@ -108,6 +121,11 @@ final class FateSites {
             return true;
         }
         var ground = level.getBlockState(pos.below());
-        return ground.is(BlockTags.DIRT) || ground.is(BlockTags.SAND) || ground.is(BlockTags.BASE_STONE_OVERWORLD);
+        return naturalGround(ground);
+    }
+
+    static boolean naturalGround(net.minecraft.world.level.block.state.BlockState ground) {
+        return ground.is(Blocks.GRASS_BLOCK) || ground.is(BlockTags.DIRT) || ground.is(BlockTags.SAND)
+                || ground.is(BlockTags.BASE_STONE_OVERWORLD);
     }
 }

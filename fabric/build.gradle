@@ -31,7 +31,8 @@ dependencies {
     compileOnly('dev.kizuna.meridian.human:server') { transitive = false }
     compileOnly('dev.kizuna.meridian.human:shared') { transitive = false }
     compileOnly files(kizunaWorkspace.artifact('vanilla-healing', 'server', false))
-    compileOnly files(kizunaWorkspace.artifact('currency', '', false),
+    compileOnly files(kizunaWorkspace.artifact('undead-threatening', 'fabric', false),
+            kizunaWorkspace.artifact('currency', '', false),
             kizunaWorkspace.artifact('mob-inventory', 'fabric', false),
             kizunaWorkspace.artifact('brewing', 'fabric', false),
             kizunaWorkspace.artifact('brewing', 'server', false),
@@ -97,7 +98,8 @@ tasks.named('processGametestResources') {
         if (restartPhase) {
             def metadata = new File(destinationDir, 'fabric.mod.json')
             def document = new groovy.json.JsonSlurper().parse(metadata)
-            document.entrypoints['fabric-gametest'] = ['dev.kizuna.meridian.story.fabric.StoryRestartGameTest']
+            document.entrypoints['fabric-gametest'] = ['dev.kizuna.meridian.story.fabric.StoryRestartGameTest',
+                    'dev.kizuna.meridian.story.fabric.MidnightRestartGameTest']
             metadata.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(document))
         }
     }
@@ -220,7 +222,7 @@ afterEvaluate {
             options.get().asFile.parentFile.mkdirs()
             options.get().asFile.text = 'version:4903\nlang:zh_cn\nonboardAccessibility:false\n'
             if (providers.gradleProperty('storyScene').getOrElse('') in
-                    ['seller', 'frantic', 'debt', 'herb', 'escort_cart', 'village_ring']) {
+                    ['seller', 'frantic', 'debt', 'herb', 'escort_cart', 'village_ring', 'midnight']) {
                 options.get().asFile.append('guiScale:2\nrenderDistance:5\nsimulationDistance:5\n')
             }
             if (providers.gradleProperty('storyScene').getOrElse('') == 'physique') {

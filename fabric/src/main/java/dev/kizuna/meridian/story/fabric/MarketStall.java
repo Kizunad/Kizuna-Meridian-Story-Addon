@@ -10,6 +10,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 
 final class MarketStall {
@@ -24,28 +25,48 @@ final class MarketStall {
         return ((GraveTemplateAccessor) template).meridianStory$palettes().getFirst().blocks();
     }
 
+    enum Light {
+        LANTERN, WHITE;
+
+        BlockState state(StructureBlockInfo cell) {
+            var original = cell.state();
+            if (this == WHITE && original.is(Blocks.LANTERN)) {
+                return Blocks.SEA_LANTERN.defaultBlockState();
+            }
+            return original;
+        }
+    }
+
     static boolean place(ServerLevel level, BlockPos site) {
+        return place(level, site, Light.LANTERN);
+    }
+
+    static boolean place(ServerLevel level, BlockPos site, Light light) {
         var corner = site.offset(-CENTER_X, 0, -CENTER_Z);
         var cells = cells(level);
         for (var cell : cells) {
             var pos = corner.offset(cell.pos());
             if (!level.isLoaded(pos) || !level.getBlockState(pos).isAir()
                     || !level.getBlockState(pos.atY(site.getY() - 1)).isSolid()
-                    || !level.isUnobstructed(cell.state(), pos, CollisionContext.empty())) {
+                    || !level.isUnobstructed(light.state(cell), pos, CollisionContext.empty())) {
                 return false;
             }
         }
         for (var cell : cells) {
-            level.setBlock(corner.offset(cell.pos()), cell.state(), Block.UPDATE_CLIENTS);
+            level.setBlock(corner.offset(cell.pos()), light.state(cell), Block.UPDATE_CLIENTS);
         }
         return true;
     }
 
     static void remove(ServerLevel level, BlockPos site) {
+        remove(level, site, Light.LANTERN);
+    }
+
+    static void remove(ServerLevel level, BlockPos site, Light light) {
         var corner = site.offset(-CENTER_X, 0, -CENTER_Z);
         for (var cell : cells(level)) {
             var pos = corner.offset(cell.pos());
-            if (level.getBlockState(pos).equals(cell.state())
+            if (level.getBlockState(pos).equals(light.state(cell))
                     && !(level.getBlockEntity(pos) instanceof Container container && !container.isEmpty())) {
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
             }

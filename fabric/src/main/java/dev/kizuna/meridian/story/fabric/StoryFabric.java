@@ -35,6 +35,7 @@ public final class StoryFabric implements ModInitializer {
     private FallenCultivator roadside;
     private StoryDialogue dialogue;
     private FateScenes fate;
+    private MidnightMarket market;
 
     @Override
     public void onInitialize() {
@@ -59,6 +60,9 @@ public final class StoryFabric implements ModInitializer {
         var forge = new GraveForge(store);
         fate = new FateScenes(store);
         fate.register();
+        market = new MidnightMarket(store);
+        market.register();
+        StoryChat.market = market;
         StoryChat.register(dialogue, forge, roadside, fate, rival);
         registerResources();
         Origins.CHOSEN.register((player, origin) -> ready(player, origin.id().toString()));
@@ -76,6 +80,7 @@ public final class StoryFabric implements ModInitializer {
         ServerPlayerEvents.LEAVE.addPhaseOrdering(departure, Event.DEFAULT_PHASE);
         ServerPlayerEvents.LEAVE.register(departure, player -> {
             shown.remove(player.getUUID());
+            market.leave(player);
             forge.leave(player);
             fate.leave(player);
             road.leave(player);
@@ -90,6 +95,7 @@ public final class StoryFabric implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(roadPhase, server -> {
             server.getPlayerList().getPlayers().forEach(graves::trackPosition);
             if (server.getTickCount() % INTERVAL == 0) {
+                TempleMarkets.get(server.overworld()).tick(server.overworld());
                 server.getPlayerList().getPlayers().forEach(this::tick);
             }
         });
@@ -177,6 +183,7 @@ public final class StoryFabric implements ModInitializer {
         graves.tick(player, view);
         road.tick(player, view, lines.get(LoneStarRoad.LINE));
         roadside.tick(player, view);
+        market.tick(player, view);
         fate.tick(player, view);
         StoryLetters.deliverPending(player, store, view.progress());
         showChapters(player, view);

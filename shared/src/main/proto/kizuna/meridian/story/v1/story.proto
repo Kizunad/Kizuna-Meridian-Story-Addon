@@ -11,6 +11,8 @@ message Progress {
   Roadside roadside = 5;
   FateJourney fate = 6;
   RoadTravel footman_road = 7;
+  map<string, MarketVisit> market_visits = 8;
+  int64 market_rest_until = 9;
 }
 
 // 命格事件的演员一经派出便沿用原 UUID，等待区块加载时不会另派一人。
@@ -158,4 +160,22 @@ message RoadsideCase {
   repeated string warrant_outcomes = 46;
   string banner = 47;
   bool escort_favor = 48;
+}
+
+// 每人每庙每夜一案。货款以案号派生的 Currency 订单为准。
+message MarketVisit {
+  int64 altar = 1;
+  int64 dawn = 2;
+  bool cursed = 3;
+  bool paper = 4;
+  bool bought = 5;
+  bool sold = 6;
+  int32 serial = 7;
+  bool opened = 8;
+  string pursuit = 9;
+  bool closed = 10;
+  string parcel_request = 11;
+  string relic_item = 12;
+  int32 copper_price = 13;
+  int32 silver_fragments = 14;
 }
