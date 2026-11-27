@@ -108,6 +108,7 @@ dependencies {
     clientTestCompileOnly libs.owo
     clientTestCompileOnly files(kizunaWorkspace.artifact('inventory-ui', '', false))
     clientTestCompileOnly files(kizunaWorkspace.artifact('human', 'fabric', false))
+    clientTestCompileOnly files(kizunaWorkspace.artifact('players-animation', '', false))
     clientTestCompileOnly files(kizunaWorkspace.artifact('ui', 'client', false),
             kizunaWorkspace.artifact('combat-ui', 'fabric', false), kizunaWorkspace.artifact('combat-ui', 'shared', false),
             kizunaWorkspace.artifact('technique', 'fabric', false), kizunaWorkspace.artifact('technique', 'shared', false),
@@ -154,7 +155,14 @@ loom {
             runDir 'build/clienttest'
             vmArg "-Dmeridian.story.scene=${providers.gradleProperty('storyScene').getOrElse('dialogue')}"
             vmArg "-Dmeridian.story.shots=${clientShots}"
-            programArgs '--quickPlaySingleplayer', 'story-dialogue-test', '--width', clientSize[0], '--height', clientSize[1]
+            if (providers.gradleProperty('storyScene').getOrElse('') == 'yunxi-anim') {
+                // 逐刻录制由客户端 GameTest 驱动，渲染和磁盘读回期间两端都不自行走时。
+                vmArg '-Dfabric.client.gametest'
+                vmArg '-Dfabric.client.gametest.modid=meridian_story_client_test'
+            } else {
+                programArgs '--quickPlaySingleplayer', 'story-dialogue-test'
+            }
+            programArgs '--width', clientSize[0], '--height', clientSize[1]
         }
     }
 }

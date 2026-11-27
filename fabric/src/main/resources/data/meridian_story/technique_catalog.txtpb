@@ -75,6 +75,10 @@ definitions {
   phases { warmup_millis: 250 active_millis: 0 recovery_millis: 300 interruptible_by_damage: true }
   cooldown_millis: 2000
   effects {
+    at_millis: 0
+    presentation { id: "meridian_story:yunxi_wind_thrust" duration: UNTIL_RECOVERY_END start_millis: 0 }
+  }
+  effects {
     at_millis: 250
     weapon_strike {
       shape: SECTOR
@@ -135,6 +139,10 @@ definitions {
   }
   phases { warmup_millis: 200 active_millis: 0 recovery_millis: 400 interruptible_by_damage: true }
   cooldown_millis: 3000
+  effects {
+    at_millis: 0
+    presentation { id: "meridian_story:yunxi_moon_lift" duration: UNTIL_RECOVERY_END start_millis: 0 }
+  }
   effects {
     at_millis: 200
     weapon_strike {
@@ -207,8 +215,7 @@ definitions {
   effects {
     at_millis: 0
     presentation {
-      # 玩家宿主按主手选择抱架片段，切换时沿用这次表现的时钟。
-      id: "meridian_basic_techniques:guard_arms"
+      id: "meridian_story:yunxi_flash_parry"
       duration: UNTIL_ACTIVE_END
       start_millis: 0
     }

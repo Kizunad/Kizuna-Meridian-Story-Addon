@@ -44,7 +44,7 @@ definitions {
   cooldown_millis: 4000
   effects {
     at_millis: 0
-    presentation { id: "meridian_door_breaker:door_breaker_cleave" duration: UNTIL_RECOVERY_END start_millis: 0 }
+    presentation { id: "meridian_story:yunxi_cloud_cleaver" duration: UNTIL_RECOVERY_END start_millis: 0 }
   }
   effects {
     at_millis: 450

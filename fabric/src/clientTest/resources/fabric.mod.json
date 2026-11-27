@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "name": "剧情对话验收",
   "environment": "client",
+  "mixins": ["meridian_story_recording.mixins.json"],
   "entrypoints": {
+    "fabric-client-gametest": ["dev.kizuna.meridian.story.fabric.client.YunxiRecording"],
     "client": [
       "dev.kizuna.meridian.story.fabric.client.DialogueClientTest",
       "dev.kizuna.meridian.story.fabric.client.RebornClientTest",
