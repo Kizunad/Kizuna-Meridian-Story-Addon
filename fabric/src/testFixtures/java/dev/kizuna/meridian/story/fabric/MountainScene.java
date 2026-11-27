@@ -10,9 +10,11 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityTypes;
@@ -34,6 +36,7 @@ final class MountainScene {
     private static final int RISE = 2;
     private static final int FIRST_STEP = 4;
     private static final int LAST_STEP = 6;
+    private static final int SCENE_CHUNK_RADIUS = 1;
     private static final int GOOD_LIMIT = 50;
     private static final int BAD_FLOOR = 80;
     private static final long ELAPSED = 6 * MountainEncounters.DAY;
@@ -52,6 +55,7 @@ final class MountainScene {
             start = start.south(TILE);
         }
         level.getChunkAt(start);
+        forceSceneChunks(level, start);
         feet = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, start).above(BASE);
         prepare(terrain);
         player.setGameMode(GameType.SURVIVAL);
@@ -70,6 +74,19 @@ final class MountainScene {
             var road = v.progress().getRoadside().toBuilder().setCases(prior).build();
             return v.progress().toBuilder().setRoadside(road).build();
         });
+    }
+
+    private static void forceSceneChunks(ServerLevel level, BlockPos center) {
+        int chunkX = SectionPos.blockToSectionCoord(center.getX());
+        int chunkZ = SectionPos.blockToSectionCoord(center.getZ());
+        for (int offsetX = -SCENE_CHUNK_RADIUS; offsetX <= SCENE_CHUNK_RADIUS; offsetX++) {
+            for (int offsetZ = -SCENE_CHUNK_RADIUS; offsetZ <= SCENE_CHUNK_RADIUS; offsetZ++) {
+                int forcedX = chunkX + offsetX;
+                int forcedZ = chunkZ + offsetZ;
+                level.getChunk(forcedX, forcedZ);
+                level.setChunkForced(forcedX, forcedZ, true /* forced */);
+            }
+        }
     }
 
     private void prepare(Terrain terrain) {
