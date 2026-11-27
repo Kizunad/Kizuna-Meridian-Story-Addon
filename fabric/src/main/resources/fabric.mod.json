@@ -42,6 +42,8 @@
     "meridian_currency": "*",
     "meridian_human_host": "*",
     "meridian_vanilla_healing": "*",
+    "meridian_mob_inventory": "*",
+    "meridian_brewing": "*",
     "meridian_origin": "*",
     "meridian_humanoid_host": "*",
     "meridian_technique": "*",

@@ -20,6 +20,12 @@ public final class RoadsideRules {
         return draw(seed ^ tile * TILE_SALT) < OPEN_CHANCE;
     }
 
+    /** 书摊与路边伤者各占两成，两种路肩事件不抢同一签。 */
+    public static boolean opensStall(long seed, long tile) {
+        int roll = draw(seed ^ tile * TILE_SALT);
+        return roll >= OPEN_CHANCE && roll < OPEN_CHANCE + OPEN_CHANCE;
+    }
+
     /** 开场时锁定的预签，取值 0–99。 */
     public static int roll(long seed, long number) {
         return draw(seed + number * CASE_SALT);

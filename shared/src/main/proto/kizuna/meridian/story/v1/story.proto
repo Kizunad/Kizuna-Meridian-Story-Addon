@@ -100,6 +100,9 @@ message Roadside {
   int64 inquiry_ticket = 6;
   bool inquiry_shown = 7;
   string last_ending = 8;
+  map<string, int64> rest_by_kind = 9;
+  map<string, RoadsideCase> last_case = 10;
+  string inquiry_party = 11;
 }
 
 // 伤者、唯一原卷（held 为真时仍在伤者怀里，交出、被夺或死亡掉落时先翻转再造出那一份实物）、开场预签、救护回执、本人出手、在场证人、追兵签与喝声。
@@ -117,4 +120,21 @@ message RoadsideCase {
   bool held = 11;
   bool wounded = 12;
   int64 arrived_at = 13;
+  string kind = 14;
+  string disciple = 15;
+  string resident = 16;
+  int64 refuge = 17;
+  int64 last_strike = 18;
+  string payment = 19;
+  string victim = 20;
+  bool practiced = 21;
+  bool purse_dropped = 22;
+  bool killed_by_owner = 23;
+  bool broke_free = 24;
+  string dose = 25;
+  int64 quoted_units = 26;
+  string ending = 27;
+  string gift_item = 28;
+  string followup_outcome = 29;
+  string followup_leader = 30;
 }

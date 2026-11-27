@@ -12,6 +12,7 @@
       "dev.kizuna.meridian.story.fabric.RoadGameTest",
       "dev.kizuna.meridian.story.fabric.FallenGameTest",
       "dev.kizuna.meridian.story.fabric.FateGameTest",
+      "dev.kizuna.meridian.story.fabric.MarketRoadGameTest",
       "dev.kizuna.meridian.story.fabric.RebornGameTest",
       "dev.kizuna.meridian.story.fabric.PhysiqueGameTest",
       "dev.kizuna.meridian.story.fabric.PhysiqueOpeningTest",

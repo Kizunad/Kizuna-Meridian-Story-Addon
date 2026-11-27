@@ -31,6 +31,11 @@ dependencies {
     compileOnly('dev.kizuna.meridian.human:server') { transitive = false }
     compileOnly('dev.kizuna.meridian.human:shared') { transitive = false }
     compileOnly files(kizunaWorkspace.artifact('vanilla-healing', 'server', false))
+    compileOnly files(kizunaWorkspace.artifact('currency', '', false),
+            kizunaWorkspace.artifact('mob-inventory', 'fabric', false),
+            kizunaWorkspace.artifact('brewing', 'fabric', false),
+            kizunaWorkspace.artifact('brewing', 'server', false),
+            kizunaWorkspace.artifact('brewing', 'shared', false))
     // 剑谱连招读功法库的打击身份和伤害附属的守方结算。
     compileOnly files(kizunaWorkspace.artifact('technique', 'fabric', false),
             kizunaWorkspace.artifact('technique', 'shared', false), kizunaWorkspace.artifact('technique', 'server', false))
@@ -214,6 +219,9 @@ afterEvaluate {
             // 26.2 首次启动先弹无障碍引导，挡住 quickPlay 进不了世界，所以每次都标记为已引导。
             options.get().asFile.parentFile.mkdirs()
             options.get().asFile.text = 'version:4903\nlang:zh_cn\nonboardAccessibility:false\n'
+            if (providers.gradleProperty('storyScene').getOrElse('') in ['seller', 'frantic']) {
+                options.get().asFile.append('guiScale:2\nrenderDistance:5\nsimulationDistance:5\n')
+            }
             if (providers.gradleProperty('storyScene').getOrElse('') == 'physique') {
                 // 并列核图固定候选池，仍由正式出身服务抽卡、发包和确认选择。
                 options.get().asFile.append('guiScale:2\n')

@@ -98,12 +98,15 @@ final class FallenCultivator {
     private final Map<UUID, Vec3> deaths = new HashMap<>();
     private final Set<Mob> loaded = new HashSet<>();
     private final StoryStore store;
+    private final VillageEncounters encounters;
 
     FallenCultivator(StoryStore store) {
         this.store = store;
+        encounters = new VillageEncounters(store);
     }
 
     void register() {
+        encounters.register();
         // 只有本人对伤者的主动攻击锁定夺卷；伤者的普通右键不再打开流浪商人的货单。
         AttackEntityCallback.EVENT.register((player, level, hand, entity, hit) -> {
             if (player instanceof ServerPlayer owner && entity instanceof Mob actor && guest(actor)) {
@@ -177,12 +180,20 @@ final class FallenCultivator {
         var roadside = view.progress().getRoadside();
         if (roadside.hasCurrent()) {
             previous.remove(player.getUUID());
+            if (!roadside.getCurrent().getKind().isEmpty()) {
+                encounters.tick(player, roadside.getCurrent());
+                return;
+            }
             follow(player, view, roadside.getCurrent());
             return;
         }
         if (roadside.getInquiryAt() > 0 || roadside.getInquiryTicket() > 0) {
             previous.remove(player.getUUID());
-            inquire(player, view, roadside);
+            if (roadside.getInquiryParty().isEmpty()) {
+                inquire(player, view, roadside);
+            } else {
+                encounters.followup(player, view);
+            }
             return;
         }
         encounter(player, view, roadside);
@@ -197,7 +208,7 @@ final class FallenCultivator {
         long settled = Math.max(view.crisis().getRoadSettledAt(), view.crisis().getSettledAt());
         if (level.dimension() != Level.OVERWORLD || !player.isAlive() || player.isSpectator() || player.isCreative()
                 || !player.onGround() || player.isPassenger() || player.isInWater() || player.getAbilities().flying
-                || view.crisis().hasPending() || now < roadside.getRestUntil() || now - settled < LoneStarRoad.REST
+                || view.crisis().hasPending() || now - settled < LoneStarRoad.REST
                 || Math.floorMod(level.getOverworldClockTime(), DAY) >= DUSK) {
             previous.remove(player.getUUID());
             return;
@@ -206,26 +217,57 @@ final class FallenCultivator {
         if (!step.followed(previous.put(player.getUUID(), step))) {
             return;
         }
-        long tile = tile(player.blockPosition());
-        var site = site(level, player.blockPosition(), player.getDirection());
-        if (roadside.getTilesList().contains(tile) || site.isEmpty()) {
+        drawAt(player, roadside, now);
+    }
+
+    private void drawAt(ServerPlayer player, Roadside roadside, long now) {
+        var level = player.level();
+        var feet = player.blockPosition();
+        long tile = tile(feet);
+        if (roadside.getTilesList().contains(tile)) {
             return;
         }
         var drawn = remember(roadside, tile);
-        if (!RoadsideRules.opens(seed(player), tile)) {
-            save(player, roadside, drawn.build());
+        long seed = seed(player);
+        var direction = player.getDirection();
+        var ahead = feet.relative(direction, AHEAD);
+        boolean village = level.isLoaded(ahead) && level.isVillage(ahead);
+        if (village && now >= roadside.getRestByKindOrDefault(FranticCultivator.KIND, 0L)
+                && FranticCultivator.gate(level, ahead)) {
+            if (!RoadsideRules.opens(seed, tile) || !encounters.frantic.open(player, drawn, ahead)) {
+                save(player, roadside, drawn.build());
+            }
             return;
         }
+        var site = site(level, feet, direction);
+        if (site.isEmpty()) {
+            return;
+        }
+        if (!village && RoadsideRules.opensStall(seed, tile)
+                && now >= roadside.getRestByKindOrDefault(ManualSeller.KIND, 0L)
+                && encounters.seller.open(player, drawn, site.get())) {
+            return;
+        }
+        if (now >= roadside.getRestUntil()) {
+            if (RoadsideRules.opens(seed, tile)) {
+                openFallen(player, roadside, drawn, site.get(), seed);
+            } else {
+                save(player, roadside, drawn.build());
+            }
+        }
+    }
+
+    private void openFallen(ServerPlayer player, Roadside roadside, Roadside.Builder drawn, BlockPos site, long seed) {
         long number = roadside.getCases() + 1;
         var current = RoadsideCase.newBuilder()
                 .setNumber(number)
                 .setActor(UUID.randomUUID().toString())
-                .setSite(site.get().asLong())
-                .setRoll(RoadsideRules.roll(seed(player), number))
+                .setSite(site.asLong())
+                .setRoll(RoadsideRules.roll(seed, number))
                 .setStage(OPEN)
-                .setScroll(BuiltInRegistries.ITEM.getKey(scroll(seed(player), number)).toString())
+                .setScroll(BuiltInRegistries.ITEM.getKey(scroll(seed, number)).toString())
                 .setHeld(true)
-                .setArrivedAt(level.getGameTime())
+                .setArrivedAt(player.level().getGameTime())
                 .build();
         var actor = arrive(player, current);
         if (actor.isEmpty()) {
@@ -350,6 +392,10 @@ final class FallenCultivator {
     // ---- 选择 ----
 
     Optional<Component> choose(ServerPlayer player, StoryChat.Selection selection) {
+        var eventReply = encounters.choose(player, selection);
+        if (eventReply.isPresent()) {
+            return eventReply;
+        }
         if (!selection.nonce().equals(sessions.get(player.getUUID()))) {
             return Optional.empty();
         }
