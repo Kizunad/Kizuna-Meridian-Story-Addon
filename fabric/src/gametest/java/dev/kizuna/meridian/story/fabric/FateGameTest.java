@@ -122,13 +122,21 @@ public final class FateGameTest {
         run.meet(sequence, "reading");
         sequence.thenExecute(() -> run.scene.strike(run.scene.actor()));
         run.joinEscort(sequence);
-        sequence.thenExecute(() -> {
-            var site = Vec3.atBottomCenterOf(run.gate.south());
-            run.scene.actor().setPos(site);
-            run.scene.player().setPos(site);
-        }).thenWaitUntil(() -> {
-            run.at("paid_hand");
-            var state = FateRoad.state(run.scene.progress());
+        sequence.thenWaitUntil(() -> {
+            var progress = run.scene.progress();
+            var state = FateRoad.state(progress);
+            String chapter = state.getChapter();
+            if (chapter.equals("walking")) {
+                var fate = progress.getFate();
+                test.assertTrue(fate.hasGate(), "护送未登记村口");
+                var player = run.scene.player();
+                var escort = FateScenes.actor(player, fate);
+                test.assertTrue(escort != null && escort.isAlive(), "等待本场活着的镖师");
+                var site = Vec3.atBottomCenterOf(BlockPos.of(fate.getGate()).south());
+                escort.setPos(site);
+                player.setPos(site);
+            }
+            test.assertTrue(chapter.equals("paid_hand"), "等候 paid_hand，实际 " + chapter);
             test.assertTrue(state.getOutcomesOrThrow("reading").equals("strike") && state.containsClaims("cord"),
                     "动手应答或活着到村口丢失");
         }).thenExecute(run.owner::close).thenSucceed();
