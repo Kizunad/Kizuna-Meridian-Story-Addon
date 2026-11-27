@@ -204,7 +204,7 @@ final class VillageEncounters {
 
     Optional<RoadsideCase> current(ServerPlayer player) {
         return store.read(player).map(view -> view.progress().getRoadside().getCurrent())
-                .filter(c -> !c.getKind().isEmpty());
+                .filter(c -> c.getKind().equals(ManualSeller.KIND) || c.getKind().equals(FranticCultivator.KIND));
     }
 
     static Optional<Mob> actor(ServerPlayer player, String id) {

@@ -14,6 +14,7 @@
       "dev.kizuna.meridian.story.fabric.RoadClientTest",
       "dev.kizuna.meridian.story.fabric.FallenClientTest",
       "dev.kizuna.meridian.story.fabric.MarketRoadClientTest",
+      "dev.kizuna.meridian.story.fabric.MountainClientTest",
       "dev.kizuna.meridian.story.fabric.YunxiInheritanceClient",
       "dev.kizuna.meridian.story.fabric.YunxiComboClient",
       "dev.kizuna.meridian.story.fabric.FateClientTest",

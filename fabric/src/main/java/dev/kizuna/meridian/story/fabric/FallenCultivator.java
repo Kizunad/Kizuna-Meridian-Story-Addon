@@ -99,14 +99,17 @@ final class FallenCultivator {
     private final Set<Mob> loaded = new HashSet<>();
     private final StoryStore store;
     private final VillageEncounters encounters;
+    final MountainEncounters mountain;
 
     FallenCultivator(StoryStore store) {
         this.store = store;
         encounters = new VillageEncounters(store);
+        mountain = new MountainEncounters(store);
     }
 
     void register() {
         encounters.register();
+        mountain.register();
         // 只有本人对伤者的主动攻击锁定夺卷；伤者的普通右键不再打开流浪商人的货单。
         AttackEntityCallback.EVENT.register((player, level, hand, entity, hit) -> {
             if (player instanceof ServerPlayer owner && entity instanceof Mob actor && guest(actor)) {
@@ -180,11 +183,15 @@ final class FallenCultivator {
         var roadside = view.progress().getRoadside();
         if (roadside.hasCurrent()) {
             previous.remove(player.getUUID());
-            if (!roadside.getCurrent().getKind().isEmpty()) {
-                encounters.tick(player, roadside.getCurrent());
+            var current = roadside.getCurrent();
+            if (mountain.tick(player, view, current)) {
                 return;
             }
-            follow(player, view, roadside.getCurrent());
+            if (!current.getKind().isEmpty()) {
+                encounters.tick(player, current);
+                return;
+            }
+            follow(player, view, current);
             return;
         }
         if (roadside.getInquiryAt() > 0 || roadside.getInquiryTicket() > 0) {
@@ -196,7 +203,9 @@ final class FallenCultivator {
             }
             return;
         }
-        encounter(player, view, roadside);
+        if (!mountain.revisit(player, view)) {
+            encounter(player, view, roadside);
+        }
     }
 
     // ---- 开场 ----
@@ -217,14 +226,15 @@ final class FallenCultivator {
         if (!step.followed(previous.put(player.getUUID(), step))) {
             return;
         }
-        drawAt(player, roadside, now);
+        drawAt(player, view, roadside);
     }
 
-    private void drawAt(ServerPlayer player, Roadside roadside, long now) {
+    private void drawAt(ServerPlayer player, StoryStore.View view, Roadside roadside) {
         var level = player.level();
+        long now = view.facts().ticks();
         var feet = player.blockPosition();
         long tile = tile(feet);
-        if (roadside.getTilesList().contains(tile)) {
+        if (roadside.getTilesList().contains(tile) || mountain.encounter(player, view, tile)) {
             return;
         }
         var drawn = remember(roadside, tile);
@@ -284,7 +294,7 @@ final class FallenCultivator {
         return BlockPos.asLong(Math.floorDiv(feet.getX(), TILE), 0, Math.floorDiv(feet.getZ(), TILE));
     }
 
-    private static Roadside.Builder remember(Roadside roadside, long tile) {
+    static Roadside.Builder remember(Roadside roadside, long tile) {
         var next = roadside.toBuilder();
         if (roadside.getTilesCount() >= MEMORY) {
             var history = roadside.getTilesList();
@@ -392,7 +402,7 @@ final class FallenCultivator {
     // ---- 选择 ----
 
     Optional<Component> choose(ServerPlayer player, StoryChat.Selection selection) {
-        var eventReply = encounters.choose(player, selection);
+        var eventReply = encounters.choose(player, selection).or(() -> mountain.choose(player, selection));
         if (eventReply.isPresent()) {
             return eventReply;
         }

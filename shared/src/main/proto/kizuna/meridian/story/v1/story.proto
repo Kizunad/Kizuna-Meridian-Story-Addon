@@ -103,6 +103,8 @@ message Roadside {
   map<string, int64> rest_by_kind = 9;
   map<string, RoadsideCase> last_case = 10;
   string inquiry_party = 11;
+  // 以初见演员为键；不同死者的再会各自到期。
+  map<string, RoadsideCase> mountain_history = 12;
 }
 
 // 伤者、唯一原卷（held 为真时仍在伤者怀里，交出、被夺或死亡掉落时先翻转再造出那一份实物）、开场预签、救护回执、本人出手、在场证人、追兵签与喝声。
@@ -137,4 +139,12 @@ message RoadsideCase {
   string gift_item = 28;
   string followup_outcome = 29;
   string followup_leader = 30;
+  bool account_heard = 31;
+  string buyer = 32;
+  string guardian = 33;
+  int64 plant = 34;
+  int32 remaining = 35;
+  string return_party = 36;
+  int64 return_at = 37;
+  int32 carried_flowers = 38;
 }
