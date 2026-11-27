@@ -219,7 +219,8 @@ afterEvaluate {
             // 26.2 首次启动先弹无障碍引导，挡住 quickPlay 进不了世界，所以每次都标记为已引导。
             options.get().asFile.parentFile.mkdirs()
             options.get().asFile.text = 'version:4903\nlang:zh_cn\nonboardAccessibility:false\n'
-            if (providers.gradleProperty('storyScene').getOrElse('') in ['seller', 'frantic', 'debt', 'herb']) {
+            if (providers.gradleProperty('storyScene').getOrElse('') in
+                    ['seller', 'frantic', 'debt', 'herb', 'escort_cart', 'village_ring']) {
                 options.get().asFile.append('guiScale:2\nrenderDistance:5\nsimulationDistance:5\n')
             }
             if (providers.gradleProperty('storyScene').getOrElse('') == 'physique') {

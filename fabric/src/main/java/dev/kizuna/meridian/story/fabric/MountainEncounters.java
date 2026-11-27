@@ -7,7 +7,9 @@ import dev.kizuna.meridian.humanoid.server.CrisisRules;
 import dev.kizuna.meridian.story.protocol.pb.StoryMessages.Roadside;
 import dev.kizuna.meridian.story.protocol.pb.StoryMessages.RoadsideCase;
 import dev.kizuna.meridian.story.server.RoadsideRules;
+import dev.kizuna.meridian.vanilla.fabric.LethalHitVeto;
 import dev.kizuna.meridian.vanilla.fabric.VanillaDamageFabric;
+import java.util.Map;
 import java.util.Optional;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,6 +31,7 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 
 final class MountainEncounters {
     static final long DAY = CrisisRules.DAY_TICKS;
@@ -41,14 +44,22 @@ final class MountainEncounters {
     private static final String OWNER = "meridian_story.mountain_owner.";
     final FathersDebt debt;
     final HerbHarvest herb;
+    final EscortCart cart;
+    final VillageRing ring;
+    private final Map<String, RoadShow> shows;
 
     MountainEncounters(StoryStore store) {
         this.store = store;
         debt = new FathersDebt(this);
         herb = new HerbHarvest(this);
+        cart = new EscortCart(this);
+        ring = new VillageRing(this);
+        shows = Map.of(cart.kind, cart, ring.kind, ring);
     }
 
     void register() {
+        LethalHitVeto.register(ring);
+        RoadVenue.register();
         herb.register();
         registerActors();
         registerCombat();
@@ -88,8 +99,10 @@ final class MountainEncounters {
             if (hit.attacker() instanceof ServerPlayer player && hit.target() instanceof Mob mob
                     && mob.entityTags().contains(GUEST)) {
                 var direct = hit.source().getDirectEntity();
-                if (direct instanceof Projectile projectile && projectile.getOwner() == player) {
-                    strike(player, mob);
+                var scene = current(player);
+                if (direct instanceof Projectile projectile && projectile.getOwner() == player
+                        || scene.filter(c -> shows.containsKey(c.getKind())).isPresent()) {
+                    scene.filter(c -> belongs(c, mob)).ifPresent(c -> strike(player, mob, c));
                 }
                 if (hit.result().health().getDamageResolution().getLossesCount() > 0 && !hit.bodyDead()) {
                     current(player).filter(c -> c.getActor().equals(mob.getStringUUID()))
@@ -106,7 +119,7 @@ final class MountainEncounters {
                     current(owner).filter(c -> belongs(c, mob)).ifPresent(c -> {
                         if (c.getKind().equals(FathersDebt.KIND)) {
                             debt.died(owner, c, source.getEntity());
-                        } else {
+                        } else if (c.getKind().equals(HerbHarvest.KIND)) {
                             herb.died(owner, c, mob);
                         }
                     });
@@ -154,23 +167,30 @@ final class MountainEncounters {
     }
 
     private void strike(ServerPlayer player, Mob mob) {
-        current(player).filter(c -> belongs(c, mob)).ifPresent(c -> {
-            if (c.getKind().equals(FathersDebt.KIND)) {
-                debt.strike(player, c, mob);
-            } else {
-                herb.strike(player, c, mob);
-            }
-        });
+        current(player).filter(c -> belongs(c, mob)).ifPresent(c -> strike(player, mob, c));
+    }
+
+    private void strike(ServerPlayer player, Mob mob, RoadsideCase c) {
+        var show = shows.get(c.getKind());
+        if (show != null) {
+            show.strike(player, c, mob);
+        } else if (c.getKind().equals(FathersDebt.KIND)) {
+            debt.strike(player, c, mob);
+        } else {
+            herb.strike(player, c, mob);
+        }
     }
 
     private static boolean belongs(RoadsideCase c, Mob mob) {
         String id = mob.getStringUUID();
-        return c.getActor().equals(id) || c.getBuyer().equals(id) || c.getGuardian().equals(id);
+        return c.getActor().equals(id) || c.getBuyer().equals(id) || c.getGuardian().equals(id)
+                || c.getCastMap().containsValue(id);
     }
 
     Optional<RoadsideCase> current(ServerPlayer player) {
         return store.read(player).map(v -> v.progress().getRoadside().getCurrent())
-                .filter(c -> c.getKind().equals(FathersDebt.KIND) || c.getKind().equals(HerbHarvest.KIND));
+                .filter(c -> c.getKind().equals(FathersDebt.KIND) || c.getKind().equals(HerbHarvest.KIND)
+                        || shows.containsKey(c.getKind()));
     }
 
     static Optional<Mob> actor(ServerPlayer player, String id) {
@@ -203,7 +223,7 @@ final class MountainEncounters {
         var trail = father.flatMap(dead -> FathersDebt.trail(player));
         var ledge = HerbLedge.find(player, view);
         if (trail.isEmpty() && ledge.isEmpty()) {
-            return false;
+            return tryShow(player, view, tile);
         }
         var drawn = FallenCultivator.remember(road, tile);
         if (!RoadsideRules.opens(FallenCultivator.seed(player), tile)) {
@@ -217,6 +237,10 @@ final class MountainEncounters {
     }
 
     boolean open(ServerPlayer player, Roadside drawn, RoadsideCase c) {
+        return open(player, drawn, c, Optional.empty());
+    }
+
+    boolean open(ServerPlayer player, Roadside drawn, RoadsideCase c, Optional<RoadsideCase> favor) {
         return store.change(player, view -> {
             var road = view.progress().getRoadside();
             if (road.hasCurrent() || road.getCases() != drawn.getCases()) {
@@ -225,14 +249,64 @@ final class MountainEncounters {
             var next = drawn.toBuilder()
                     .setCurrent(c)
                     .setCases(c.getNumber())
-                    .clearLastEnding()
-                    .build();
-            return view.progress().toBuilder().setRoadside(next).build();
+                    .clearLastEnding();
+            if (favor.isPresent()) {
+                var paid = favor.get();
+                if (!paid.equals(road.getMountainHistoryMap().get(paid.getActor())) || !paid.getEscortFavor()) {
+                    return view.progress();
+                }
+                next.putMountainHistory(paid.getActor(), paid.toBuilder().clearEscortFavor().build());
+            }
+            return view.progress().toBuilder().setRoadside(next.build()).build();
         });
     }
 
+    private boolean tryShow(ServerPlayer player, StoryStore.View view, long tile) {
+        var level = player.level();
+        var pos = player.blockPosition();
+        BlockPos feet = pos;
+        if (level.getBlockState(pos).is(Blocks.DIRT_PATH)) {
+            feet = pos.above();
+        }
+        if (Math.floorMod(level.getOverworldClockTime(), DAY) >= RoadShow.DAYLIGHT) {
+            return false;
+        }
+        var approach = feet.relative(player.getDirection(), RoadVenue.APPROACH);
+        var venue = RoadVenue.get(level);
+        BlockPos center;
+        RoadShow show;
+        if (ring.nearVillage(player, approach, feet)) {
+            show = ring;
+            center = venue.nearbyRing(approach).orElse(approach);
+        } else if (FathersDebt.trail(player).isPresent()) {
+            show = cart;
+            center = approach;
+        } else {
+            return false;
+        }
+        var road = view.progress().getRoadside();
+        if (show == cart && road.getMountainHistoryMap().values().stream().anyMatch(c -> c.getWarrants() > 0)) {
+            return false;
+        }
+        if (view.facts().ticks() < road.getRestByKindOrDefault(show.kind, 0L)
+                || !venue.available(level, center, show.kind)) {
+            return false;
+        }
+        var drawn = FallenCultivator.remember(road, tile).build();
+        if (show == cart && cart.escort(player, drawn, center)) {
+            return true;
+        }
+        if (RoadsideRules.opens(FallenCultivator.seed(player), tile) && show.open(player, drawn, center)) {
+            return true;
+        }
+        return save(player, road, drawn);
+    }
+
     void offer(ServerPlayer player, RoadsideCase c) {
-        if (c.getKind().equals(FathersDebt.KIND)) {
+        var show = shows.get(c.getKind());
+        if (show != null) {
+            show.offer(player, c);
+        } else if (c.getKind().equals(FathersDebt.KIND)) {
             debt.offer(player, c);
         } else {
             herb.offer(player, c);
@@ -247,6 +321,13 @@ final class MountainEncounters {
     Optional<Component> choose(ServerPlayer player, StoryChat.Selection click) {
         return current(player).filter(c -> valid(c, click))
                 .flatMap(c -> {
+                    var show = shows.get(c.getKind());
+                    if (show != null) {
+                        if (show.choose(player, c, click.option())) {
+                            return Optional.of(Component.empty());
+                        }
+                        return Optional.empty();
+                    }
                     if (c.getKind().equals(FathersDebt.KIND)) {
                         return debt.choose(player, c, click.option());
                     }
@@ -263,12 +344,15 @@ final class MountainEncounters {
     }
 
     boolean tick(ServerPlayer player, StoryStore.View view, RoadsideCase c) {
-        if (!c.getKind().equals(FathersDebt.KIND) && !c.getKind().equals(HerbHarvest.KIND)) {
+        var show = shows.get(c.getKind());
+        if (show == null && !c.getKind().equals(FathersDebt.KIND) && !c.getKind().equals(HerbHarvest.KIND)) {
             return false;
         }
         if (player.level().dimension() != Level.OVERWORLD || !player.isAlive()
                 || player.blockPosition().distSqr(BlockPos.of(c.getSite())) > AWAY * AWAY) {
             leave(player, c);
+        } else if (show != null) {
+            show.tick(player, c);
         } else if (c.getKind().equals(FathersDebt.KIND)) {
             debt.tick(player, c);
         } else {
@@ -278,7 +362,10 @@ final class MountainEncounters {
     }
 
     private void leave(ServerPlayer player, RoadsideCase c) {
-        if (c.getKind().equals(FathersDebt.KIND)) {
+        var show = shows.get(c.getKind());
+        if (show != null) {
+            show.leave(player, c);
+        } else if (c.getKind().equals(FathersDebt.KIND)) {
             debt.separated(player, c);
         } else {
             herb.leave(player, c);
@@ -296,15 +383,15 @@ final class MountainEncounters {
         });
     }
 
-    void end(ServerPlayer player, RoadsideCase c, String ending, String party, long delay) {
+    boolean end(ServerPlayer player, RoadsideCase c, String ending, String party, long delay) {
         var found = store.read(player);
         if (found.isEmpty()) {
-            return;
+            return false;
         }
         var view = found.get();
         var road = view.progress().getRoadside();
         if (!road.getCurrent().getActor().equals(c.getActor())) {
-            return;
+            return false;
         }
         long now = view.facts().ticks();
         var closed = c.toBuilder()
@@ -315,6 +402,8 @@ final class MountainEncounters {
         long rest = HerbHarvest.REST;
         if (c.getKind().equals(FathersDebt.KIND)) {
             rest = FathersDebt.REST;
+        } else if (shows.containsKey(c.getKind())) {
+            rest = RoadShow.REST;
         }
         var next = road.toBuilder()
                 .clearCurrent()
@@ -325,7 +414,9 @@ final class MountainEncounters {
         if (save(player, road, next)) {
             release(player, c);
             narrate(player, c, ending);
+            return true;
         }
+        return false;
     }
 
     private static void release(ServerPlayer player, RoadsideCase c) {
@@ -389,6 +480,19 @@ final class MountainEncounters {
             var result = c.toBuilder()
                     .clearReturnParty()
                     .setFollowupOutcome(receipt.getOutcome());
+            if (party.equals(EscortCart.WARRANT)) {
+                result.addWarrantOutcomes(receipt.getOutcome());
+                if (c.getWarrants() > 1) {
+                    result.setReturnParty(party)
+                            .setWarrants(c.getWarrants() - 1)
+                            .setReturnAt(view.facts().ticks() + EscortCart.WARRANT_INTERVAL)
+                            .clearTicket()
+                            .clearShouted()
+                            .clearFollowupLeader();
+                } else {
+                    result.clearWarrants();
+                }
+            }
             if (c.getKind().equals(HerbHarvest.KIND)) {
                 result.setCarriedFlowers(HerbHarvest.carried(player, c));
             }

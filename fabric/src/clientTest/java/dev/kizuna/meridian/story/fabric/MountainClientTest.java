@@ -2,6 +2,8 @@ package dev.kizuna.meridian.story.fabric;
 
 import dev.kizuna.meridian.humanoid.fabric.CrisisEncounters;
 import dev.kizuna.meridian.story.fabric.client.ChatChoices;
+import dev.kizuna.meridian.story.protocol.pb.StoryMessages.RoadsideCase;
+import dev.kizuna.meridian.vanilla.fabric.VanillaDamageFabric;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -23,10 +25,13 @@ public final class MountainClientTest implements ClientModInitializer {
     private static final int SETTLE = 24;
     private static final int AWAY = 96;
     private static final int CAMERA = 3;
+    private static final double DECIDING_BLOW = 10_000;
     private final ChatChoices choices = new ChatChoices();
     private final String kind = System.getProperty("meridian.story.scene", "");
     private Stage stage = Stage.START;
     private MountainScene scene;
+    private VenueScene venue;
+    private RoadsideCase round;
     private int ticks;
     private int steady;
     private int actorId;
@@ -34,10 +39,14 @@ public final class MountainClientTest implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        if (kind.equals(FathersDebt.KIND) || kind.equals(HerbHarvest.KIND)) {
+        if (kind.equals(FathersDebt.KIND) || kind.equals(HerbHarvest.KIND) || venueScene()) {
             choices.listen();
             ClientTickEvents.END_CLIENT_TICK.register(this::tick);
         }
+    }
+
+    private boolean venueScene() {
+        return kind.equals(EscortCart.KIND) || kind.equals(VillageRing.KIND);
     }
 
     private void tick(Minecraft client) {
@@ -57,7 +66,7 @@ public final class MountainClientTest implements ClientModInitializer {
             switch (stage) {
                 case START -> stage = server.submit(() -> prepare(server.getPlayerList().getPlayer(id))).join();
                 case ARRIVE -> {
-                    if (client.levelRenderer.isSectionCompiledAndVisible(scene.feet.below())) {
+                    if (client.levelRenderer.isSectionCompiledAndVisible(landmark)) {
                         client.gui.hud.getChat().clearMessages(false /* clearSentHistory */);
                         stage = server.submit(() -> open(server.getPlayerList().getPlayer(id))).join();
                     }
@@ -89,11 +98,22 @@ public final class MountainClientTest implements ClientModInitializer {
         String name = player.getScoreboardName();
         server.getCommands().performPrefixedCommand(server.createCommandSourceStack(),
                 "meridian debug origin set " + name + " meridian_story:ordinary");
+        if (venueScene()) {
+            player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+            venue = new VenueScene(player, player.blockPosition().east(AWAY), VenueScene.GOOD);
+            landmark = venue.center.below();
+            if (kind.equals(VillageRing.KIND)) {
+                player.getInventory().add(VenueScene.coins("silver_fragment", 1));
+            }
+            server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "time set noon");
+            return Stage.ARRIVE;
+        }
         var terrain = MountainScene.Terrain.CLIFF;
         if (kind.equals(FathersDebt.KIND)) {
             terrain = MountainScene.Terrain.TRAIL;
         }
         scene = new MountainScene(player, player.blockPosition().east(AWAY), terrain, MountainScene.Lot.GOOD);
+        landmark = scene.feet.below();
         dress(player, scene.feet);
         if (kind.equals(FathersDebt.KIND)) {
             scene.father().die(player.damageSources().playerAttack(player));
@@ -104,6 +124,18 @@ public final class MountainClientTest implements ClientModInitializer {
     }
 
     private Stage open(ServerPlayer player) {
+        if (venueScene()) {
+            round = venue.open(kind);
+            if (kind.equals(EscortCart.KIND)) {
+                venue.move(venue.center.offset(RoadVenue.BANK));
+                landmark = venue.center.offset(RoadVenue.CRATE);
+            } else {
+                venue.move(venue.center.offset(RoadVenue.TABLE).south(CAMERA));
+                landmark = venue.center;
+            }
+            player.lookAt(Anchor.EYES, Vec3.atCenterOf(landmark.above()));
+            return Stage.OPENING;
+        }
         scene.move(scene.feet);
         if (!scene.enter() || !scene.current().getKind().equals(kind)) {
             throw new IllegalStateException("取景地没有开场 " + kind);
@@ -141,6 +173,9 @@ public final class MountainClientTest implements ClientModInitializer {
     }
 
     private Stage finishScene(ServerPlayer player) {
+        if (venueScene()) {
+            return finishVenue(player);
+        }
         if (scene.current().getStage().equals("shared")) {
             var c = scene.current();
             scene.pick(c);
@@ -152,9 +187,32 @@ public final class MountainClientTest implements ClientModInitializer {
         return Stage.HARVEST;
     }
 
+    private Stage finishVenue(ServerPlayer player) {
+        var c = venue.current();
+        if (c.getStage().equals(EscortCart.WATCH)) {
+            venue.retreat(c, "chief", "bandit");
+        } else if (c.getStage().equals("exhibition")) {
+            var winner = venue.role(c, "white");
+            var loser = venue.role(c, "second");
+            var hit = new VanillaDamageFabric.DirectDamage(loser,
+                    loser.damageSources().mobAttack(winner), "head", DECIDING_BLOW);
+            VanillaDamageFabric.damageDirect(hit).orElseThrow();
+        }
+        if (!venue.current().getActor().isEmpty()) {
+            return Stage.HARVEST;
+        }
+        var ending = venue.history(round).getEnding();
+        if (!ending.equals("salvage") && !ending.equals("bet_good")) {
+            throw new IllegalStateException("取景结局错误 " + ending);
+        }
+        landmark = venue.center.below();
+        return Stage.ENDING;
+    }
+
     private void capture(Minecraft client, String name, Stage next) {
         var renderer = client.levelRenderer;
-        if (client.level.getEntity(actorId) == null || !renderer.isSectionCompiledAndVisible(landmark)) {
+        boolean waitingForActor = !venueScene() && client.level.getEntity(actorId) == null;
+        if (waitingForActor || !renderer.isSectionCompiledAndVisible(landmark)) {
             steady = 0;
             return;
         }
