@@ -57,7 +57,7 @@ final class GraveMood extends MobEffect {
         bodies.apply(player, body, StoryProgress.KEY, plan.build());
     }
 
-    enum Mood { AT_PEACE, HOMESICK, BEREAVED }
+    enum Mood { AT_PEACE, HOMESICK, BEREAVED, OVERDUE }
 
     private static CapabilityModifier modifier(long now) {
         var start = CurvePoint.newBuilder().setValue(1).build();

@@ -77,7 +77,8 @@ final class GraveVisits {
             if (progress.hasGrave()) {
                 leave(player);
             }
-            if (progress.hasGrave() || progress.getFate().getGrievingUntil() > 0) {
+            if (progress.hasGrave() || progress.getFate().getGrievingUntil() > 0
+                    || progress.getRoadside().getMountainHistoryMap().values().stream().anyMatch(c -> c.hasBequest())) {
                 reconcileMood(player, view, GraveMood.Mood.AT_PEACE);
             }
             return;
@@ -99,7 +100,8 @@ final class GraveVisits {
             registered = store.read(player).orElseThrow();
         }
         var supplied = deliver(player, registered);
-        site.anchor().ifPresent(stone -> keepVigil(player, supplied, site, stone));
+        site.anchor().ifPresentOrElse(stone -> keepVigil(player, supplied, site, stone),
+                () -> reconcileMood(player, supplied, GraveMood.Mood.AT_PEACE));
     }
 
     private void keepVigil(ServerPlayer player, StoryStore.View view, GraveSite site, BlockPos stone) {
@@ -139,10 +141,13 @@ final class GraveVisits {
         visit(player, view, site, stay, enteredOnline);
     }
 
-    private void reconcileMood(ServerPlayer player, StoryStore.View view, GraveMood.Mood grave) {
+    void reconcileMood(ServerPlayer player, StoryStore.View view, GraveMood.Mood grave) {
         var mood = grave;
         if (grave == GraveMood.Mood.AT_PEACE && view.progress().getFate().getGrievingUntil() > view.facts().ticks()) {
             mood = GraveMood.Mood.BEREAVED;
+        }
+        if (mood == GraveMood.Mood.AT_PEACE && BequestPromise.overdue(view.progress(), view.facts().ticks())) {
+            mood = GraveMood.Mood.OVERDUE;
         }
         GraveMood.reconcile(player, bodies, view.body(), mood);
     }

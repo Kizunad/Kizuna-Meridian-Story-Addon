@@ -1,0 +1,31 @@
+{
+  "lineups": [
+    {
+      "band": "wandering",
+      "stage": 0,
+      "leader": {
+        "species": "minecraft:pillager",
+        "tier": "wandering_qi"
+      },
+      "followers": []
+    },
+    {
+      "band": "true_few",
+      "stage": 0,
+      "leader": {
+        "species": "minecraft:pillager",
+        "tier": "wandering_qi"
+      },
+      "followers": []
+    },
+    {
+      "band": "true_many",
+      "stage": 0,
+      "leader": {
+        "species": "minecraft:pillager",
+        "tier": "wandering_qi"
+      },
+      "followers": []
+    }
+  ]
+}

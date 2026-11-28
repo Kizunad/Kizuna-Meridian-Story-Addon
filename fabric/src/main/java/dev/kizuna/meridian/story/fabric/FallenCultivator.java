@@ -180,6 +180,7 @@ final class FallenCultivator {
     }
 
     void tick(ServerPlayer player, StoryStore.View view) {
+        mountain.bequest.promise.tick(player, view);
         var roadside = view.progress().getRoadside();
         if (roadside.hasCurrent()) {
             previous.remove(player.getUUID());
@@ -218,7 +219,7 @@ final class FallenCultivator {
         if (level.dimension() != Level.OVERWORLD || !player.isAlive() || player.isSpectator() || player.isCreative()
                 || !player.onGround() || player.isPassenger() || player.isInWater() || player.getAbilities().flying
                 || view.crisis().hasPending() || now - settled < LoneStarRoad.REST
-                || Math.floorMod(level.getOverworldClockTime(), DAY) >= DUSK) {
+                || Math.floorMod(level.getOverworldClockTime(), DAY) >= LastRequest.NIGHT) {
             previous.remove(player.getUUID());
             return;
         }
@@ -226,7 +227,9 @@ final class FallenCultivator {
         if (!step.followed(previous.put(player.getUUID(), step))) {
             return;
         }
-        drawAt(player, view, roadside);
+        if (!mountain.bequest.approach(player, view) && Math.floorMod(level.getOverworldClockTime(), DAY) < DUSK) {
+            drawAt(player, view, roadside);
+        }
     }
 
     private void drawAt(ServerPlayer player, StoryStore.View view, Roadside roadside) {

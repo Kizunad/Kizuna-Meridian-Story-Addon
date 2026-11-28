@@ -16,6 +16,7 @@
       "dev.kizuna.meridian.story.fabric.MountainGameTest",
       "dev.kizuna.meridian.story.fabric.VenueGameTest",
       "dev.kizuna.meridian.story.fabric.MidnightGameTest",
+      "dev.kizuna.meridian.story.fabric.BequestGameTest",
       "dev.kizuna.meridian.story.fabric.RebornGameTest",
       "dev.kizuna.meridian.story.fabric.PhysiqueGameTest",
       "dev.kizuna.meridian.story.fabric.PhysiqueOpeningTest",

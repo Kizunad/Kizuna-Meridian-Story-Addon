@@ -42,6 +42,7 @@ final class MountainEncounters {
     private final StoryStore store;
     private final Set<Mob> loaded = new HashSet<>();
     private static final String OWNER = "meridian_story.mountain_owner.";
+    final LastRequest bequest;
     final FathersDebt debt;
     final HerbHarvest herb;
     final EscortCart cart;
@@ -50,6 +51,7 @@ final class MountainEncounters {
 
     MountainEncounters(StoryStore store) {
         this.store = store;
+        bequest = new LastRequest(this, store);
         debt = new FathersDebt(this);
         herb = new HerbHarvest(this);
         cart = new EscortCart(this);
@@ -60,6 +62,7 @@ final class MountainEncounters {
     void register() {
         LethalHitVeto.register(ring);
         RoadVenue.register();
+        bequest.register();
         herb.register();
         registerActors();
         registerCombat();
@@ -190,7 +193,7 @@ final class MountainEncounters {
     Optional<RoadsideCase> current(ServerPlayer player) {
         return store.read(player).map(v -> v.progress().getRoadside().getCurrent())
                 .filter(c -> c.getKind().equals(FathersDebt.KIND) || c.getKind().equals(HerbHarvest.KIND)
-                        || shows.containsKey(c.getKind()));
+                        || c.hasBequest() || shows.containsKey(c.getKind()));
     }
 
     static Optional<Mob> actor(ServerPlayer player, String id) {
@@ -319,8 +322,15 @@ final class MountainEncounters {
     }
 
     Optional<Component> choose(ServerPlayer player, StoryChat.Selection click) {
+        var promised = bequest.promise.choose(player, click);
+        if (promised.isPresent()) {
+            return promised;
+        }
         return current(player).filter(c -> valid(c, click))
                 .flatMap(c -> {
+                    if (c.hasBequest()) {
+                        return bequest.choose(player, c, click.option());
+                    }
                     var show = shows.get(c.getKind());
                     if (show != null) {
                         if (show.choose(player, c, click.option())) {
@@ -345,6 +355,9 @@ final class MountainEncounters {
 
     boolean tick(ServerPlayer player, StoryStore.View view, RoadsideCase c) {
         var show = shows.get(c.getKind());
+        if (c.hasBequest()) {
+            return bequest.tick(player, c);
+        }
         if (show == null && !c.getKind().equals(FathersDebt.KIND) && !c.getKind().equals(HerbHarvest.KIND)) {
             return false;
         }
@@ -362,6 +375,10 @@ final class MountainEncounters {
     }
 
     private void leave(ServerPlayer player, RoadsideCase c) {
+        if (c.hasBequest()) {
+            bequest.tick(player, c);
+            return;
+        }
         var show = shows.get(c.getKind());
         if (show != null) {
             show.leave(player, c);
@@ -394,13 +411,19 @@ final class MountainEncounters {
             return false;
         }
         long now = view.facts().ticks();
-        var closed = c.toBuilder()
+        var result = c.toBuilder()
                 .setEnding(ending)
                 .setReturnParty(party)
-                .setReturnAt(now + delay)
-                .build();
+                .setReturnAt(now + delay);
+        if (c.getBequest().getCreditedQi() > 0) {
+            var terms = c.getBequest().toBuilder().setDue(now + LastRequest.TERM).build();
+            result.setBequest(terms);
+        }
+        var closed = result.build();
         long rest = HerbHarvest.REST;
-        if (c.getKind().equals(FathersDebt.KIND)) {
+        if (c.hasBequest()) {
+            rest = LastRequest.REST;
+        } else if (c.getKind().equals(FathersDebt.KIND)) {
             rest = FathersDebt.REST;
         } else if (shows.containsKey(c.getKind())) {
             rest = RoadShow.REST;
@@ -412,7 +435,11 @@ final class MountainEncounters {
                 .putRestByKind(c.getKind(), now + rest)
                 .build();
         if (save(player, road, next)) {
-            release(player, c);
+            if (c.hasBequest()) {
+                bequest.close(player, closed);
+            } else {
+                release(player, c);
+            }
             narrate(player, c, ending);
             return true;
         }

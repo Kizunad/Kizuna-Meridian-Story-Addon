@@ -160,6 +160,7 @@ message RoadsideCase {
   repeated string warrant_outcomes = 46;
   string banner = 47;
   bool escort_favor = 48;
+  Bequest bequest = 49;
 }
 
 // 每人每庙每夜一案。货款以案号派生的 Currency 订单为准。
@@ -178,4 +179,18 @@ message MarketVisit {
   string relic_item = 12;
   int32 copper_price = 13;
   int32 silver_fragments = 14;
+}
+
+// 一次托付的接件地、有效佩号及人体终回执随案保存。
+message Bequest {
+  int64 gate = 1;
+  int32 serial = 2;
+  int64 due = 3;
+  bool delivered = 4;
+  bool overdue = 5;
+  string meridian = 6;
+  double credited_qi = 7;
+  bytes funding_digest = 8;
+  bool studied = 9;
+  bool witnessed_note = 10;
 }

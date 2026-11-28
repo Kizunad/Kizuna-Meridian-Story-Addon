@@ -28,6 +28,7 @@ dependencies {
     compileOnly('dev.kizuna.meridian.origin:fabric') { transitive = false }
     compileOnly('dev.kizuna.meridian.humanoid:fabric') { transitive = false }
     compileOnly('dev.kizuna.meridian.humanoid:server') { transitive = false }
+    compileOnly files(kizunaWorkspace.artifact('human', 'fabric', false))
     compileOnly('dev.kizuna.meridian.human:server') { transitive = false }
     compileOnly('dev.kizuna.meridian.human:shared') { transitive = false }
     compileOnly files(kizunaWorkspace.artifact('vanilla-healing', 'server', false))
@@ -222,7 +223,7 @@ afterEvaluate {
             options.get().asFile.parentFile.mkdirs()
             options.get().asFile.text = 'version:4903\nlang:zh_cn\nonboardAccessibility:false\n'
             if (providers.gradleProperty('storyScene').getOrElse('') in
-                    ['seller', 'frantic', 'debt', 'herb', 'escort_cart', 'village_ring', 'midnight']) {
+                    ['seller', 'frantic', 'debt', 'herb', 'escort_cart', 'village_ring', 'midnight', 'bequest']) {
                 options.get().asFile.append('guiScale:2\nrenderDistance:5\nsimulationDistance:5\n')
             }
             if (providers.gradleProperty('storyScene').getOrElse('') == 'physique') {
