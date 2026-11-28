@@ -73,8 +73,13 @@ final class MarketStall {
         }
     }
 
+    /** 摊主站在 site，柜台（云杉木板）在他北面一格。 */
+    static BlockPos counter(BlockPos site) {
+        return site.north();
+    }
+
     static void overturn(ServerLevel level, BlockPos site) {
-        var counter = site.north();
+        var counter = counter(site);
         var state = level.getBlockState(counter);
         if (state.is(Blocks.SPRUCE_PLANKS)) {
             level.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, counter, Block.getId(state));

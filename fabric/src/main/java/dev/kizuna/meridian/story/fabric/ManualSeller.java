@@ -71,6 +71,7 @@ final class ManualSeller {
         }
         var seller = guest.get();
         VillageEncounters.markStall(seller, site);
+        StoryPoses.tend(seller, MarketStall.counter(site));
         var book = book(player, c);
         if (MobInventories.open(seller).insert(book) != 1 || !events.open(player, road, c)) {
             seller.discard();

@@ -6,6 +6,7 @@ import dev.kizuna.meridian.story.protocol.pb.StoryMessages.GraveKeeper;
 import dev.kizuna.meridian.story.server.StoryProgress;
 import dev.kizuna.meridian.taunts.fabric.BubblePayload;
 import dev.kizuna.meridian.technique.fabric.TechniqueFabric;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
@@ -49,6 +50,8 @@ public final class RivalVisitTest {
                 .thenWaitUntil(() -> test.assertTrue(said(owner, "invite"), "陈恪未约剑"))
                 .thenExecute(() -> {
                     test.assertTrue(narrated(owner, "scene"), "到场没有旁白");
+                    test.assertTrue(StoryPoseChecks.poses(rival(owner)).equals(Set.of(StoryPoses.ARMS_CROSSED)),
+                            "等应约时陈恪没有只抱臂，实际 " + StoryPoseChecks.poses(rival(owner)));
                     test.assertTrue(((RivalSwordsman) rival(owner)).getMainHandItem().is(Items.IRON_SWORD),
                             "陈恪手里没剑");
                     owner.choose(owner.offers().getLast(), 0);
@@ -63,6 +66,7 @@ public final class RivalVisitTest {
                 })
                 .thenExecuteAfter(GUARD_READY, () -> {
                     test.assertTrue(rival(owner) instanceof RivalSwordsman, "成架前陈恪离场 " + diagnose(owner));
+                    test.assertTrue(StoryPoseChecks.poses(rival(owner)).isEmpty(), "比试中陈恪还摆着抱臂");
                     test.assertTrue(TechniqueFabric.service().activeGuard(rival(owner).getUUID()).isPresent(),
                             "陈恪未成架");
                     test.assertTrue(said(owner, "ready"), "成架后没说好了");

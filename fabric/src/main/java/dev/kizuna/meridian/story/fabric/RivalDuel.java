@@ -160,6 +160,8 @@ final class RivalDuel {
         }
         var match = new Match(challenger, rival.getUUID(), arena, hand.orElseThrow());
         matches.put(id, match);
+        // 开场就收起等人时的抱臂，出招之间回到架势。
+        StoryPoses.drop(rival, StoryPoses.ARMS_CROSSED);
         face(rival, challenger);
         raise(rival, match);
         return Optional.empty();

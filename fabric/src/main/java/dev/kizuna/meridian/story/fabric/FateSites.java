@@ -35,10 +35,13 @@ final class FateSites {
     }
 
     static Optional<BlockPos> feet(ServerLevel level, BlockPos around) {
-        return BlockPos.findClosestMatch(around, SEARCH, SEARCH,
-                p -> level.isLoaded(p) && level.getBlockState(p.below()).isSolid()
-                        && !level.getBlockState(p.below()).is(BlockTags.CAMPFIRES)
-                        && level.getBlockState(p).isAir() && level.getBlockState(p.above()).isAir());
+        return BlockPos.findClosestMatch(around, SEARCH, SEARCH, p -> standable(level, p));
+    }
+
+    static boolean standable(ServerLevel level, BlockPos p) {
+        return level.isLoaded(p) && level.getBlockState(p.below()).isSolid()
+                && !level.getBlockState(p.below()).is(BlockTags.CAMPFIRES)
+                && level.getBlockState(p).isAir() && level.getBlockState(p.above()).isAir();
     }
 
     static Optional<BlockPos> fire(ServerPlayer player) {

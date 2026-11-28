@@ -98,6 +98,10 @@ final class RivalVisit {
             return true;
         }
         var rival = arrived.orElseThrow();
+        // 等着应约时抱臂；比试开场时收起（见 RivalDuel），散场后回来接着抱臂。
+        if (!RivalDuel.engaged(guest)) {
+            StoryPoses.pose(rival, StoryPoses.ARMS_CROSSED);
+        }
         if (!present) {
             greet(player, rival, view);
         } else if (!RivalDuel.engaged(guest)) {

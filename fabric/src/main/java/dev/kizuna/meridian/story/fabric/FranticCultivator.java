@@ -122,6 +122,8 @@ final class FranticCultivator {
             disciple.ifPresent(Mob::discard);
             return false;
         }
+        // 走火入魔者的同门抱着臂在一旁等。
+        StoryPoses.pose(disciple.get(), StoryPoses.ARMS_CROSSED);
         return true;
     }
 

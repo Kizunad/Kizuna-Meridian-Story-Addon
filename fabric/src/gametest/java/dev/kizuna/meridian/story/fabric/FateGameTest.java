@@ -70,6 +70,9 @@ public final class FateGameTest {
                 }).thenWaitUntil(() -> test.assertTrue(
                         !run.owner.offers(FateScenes.ACTION).isEmpty(), "批命未自动开场"));
         sequence.thenExecuteAfter(SECOND, () -> {
+            // 算命人坐在火边，开场那句把烤着的手收进袖里。
+            StoryPoseChecks.seatedAtFire(test, run.scene.actor());
+            test.assertTrue(run.scene.actor().entityTags().contains(StoryPoses.SLEEVES), "批命开场时算命人没有收手入袖");
             run.checkOpening("reading", READING_OPTIONS, 1);
             run.choose(1);
         });

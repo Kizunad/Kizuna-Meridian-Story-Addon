@@ -198,6 +198,10 @@ final class FateScenes {
             opened.put(owner.getUUID(), guest.getUUID());
             String prompt = chapter(view).equals("reading") ? "reading" : "escort.scene";
             narrate(owner, prompt);
+            if (prompt.equals("reading")) {
+                // 算命人听见脚步，把烤到一半的手收进袖里。
+                StoryPoses.sleeves(guest);
+            }
             present(owner, view, guest.getStringUUID());
         }
     }
@@ -232,6 +236,10 @@ final class FateScenes {
         }
         var actor = guest.get();
         actor.addTag(COMPANION + player.getStringUUID());
+        if (reading) {
+            // 算命人坐在火边烤手。
+            around.ifPresent(fire -> StoryPoses.seat(level, actor, fire));
+        }
         if (!reading) {
             actor.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(BuiltInRegistries.ITEM.getValue(ESCORT_BANNER)));
         }

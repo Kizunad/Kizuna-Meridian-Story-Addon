@@ -104,6 +104,10 @@ final class RoadFootman {
         feet.flatMap(pos -> HumanoidVisitors.arrive(level, pos, UUID.randomUUID(),
                 Component.translatable("story.meridian_story.road.footman"))).ifPresent(actor -> {
             actor.addTag(GUEST);
+            if (level.getBlockState(target).is(BlockTags.CAMPFIRES)) {
+                // 借宿的脚夫坐在营火边烤火；追兵到时那一程在路上引路，站着。
+                StoryPoses.seat(level, actor, target);
+            }
             guests.put(player.getUUID(), actor);
             if (pursuit(view)) {
                 var line = Component.translatable("story.meridian_story.road.guide");

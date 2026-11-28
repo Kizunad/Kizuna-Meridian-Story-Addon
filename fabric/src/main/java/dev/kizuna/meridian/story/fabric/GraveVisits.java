@@ -251,8 +251,10 @@ final class GraveVisits {
         if (grave.getLot().equals("friend") && state != null && state.getEnding().isEmpty()) {
             var guest = visitor(player, grave);
             if (site.receive(level, player.getUUID(), guest)) {
+                // 周前辈背着手站在冢边。
                 HumanoidVisitors.arrive(level, site.guest(), guest,
-                        Component.translatable("story.meridian_story.friend.name"));
+                        Component.translatable("story.meridian_story.friend.name"))
+                        .ifPresent(friend -> StoryPoses.pose(friend, StoryPoses.HANDS_BEHIND));
             }
             return;
         }

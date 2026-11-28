@@ -72,6 +72,7 @@ final class StoryDialogue {
                 conversations.remove(player.getUUID());
             }
         } else {
+            StoryPoses.talk(actor);
             offer(player, actor, choices);
         }
         return true;

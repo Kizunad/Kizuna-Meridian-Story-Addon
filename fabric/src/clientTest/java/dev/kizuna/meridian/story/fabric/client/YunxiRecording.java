@@ -59,6 +59,10 @@ public final class YunxiRecording implements FabricClientGameTest {
 
     @Override
     public void runTest(ClientGameTestContext context) {
+        // 同一客户端 GameTest 模组里还有日常姿态录像；按场景各录各的。
+        if (!"yunxi-anim".equals(System.getProperty("meridian.story.scene"))) {
+            return;
+        }
         try (var world = context.worldBuilder().create()) {
             prepare(context, world);
             attack(context, world, THRUST, THRUST_TICKS, InteractionHand.MAIN_HAND);

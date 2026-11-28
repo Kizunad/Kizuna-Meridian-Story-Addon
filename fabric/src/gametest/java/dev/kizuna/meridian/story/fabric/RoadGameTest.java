@@ -232,6 +232,7 @@ public final class RoadGameTest {
                         scene.camp();
                         camp = scene.player().blockPosition();
                     }).thenWaitUntil(() -> handInWaybill(escort ? 0 : 1))
+                    .thenExecute(() -> StoryPoseChecks.seatedAtFire(test, scene.visitor()))
                     .thenWaitUntil(() -> test.assertTrue(scene.delivered(proof), "未领本人凭据"))
                     .thenExecute(() -> {
                         test.assertTrue(party().equals(LoneStarRoad.SCOUT), "未开脉就能引来追兵");

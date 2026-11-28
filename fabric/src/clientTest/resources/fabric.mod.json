@@ -6,7 +6,10 @@
   "environment": "client",
   "mixins": ["meridian_story_recording.mixins.json"],
   "entrypoints": {
-    "fabric-client-gametest": ["dev.kizuna.meridian.story.fabric.client.YunxiRecording"],
+    "fabric-client-gametest": [
+      "dev.kizuna.meridian.story.fabric.client.YunxiRecording",
+      "dev.kizuna.meridian.story.fabric.NpcPoseRecording"
+    ],
     "client": [
       "dev.kizuna.meridian.story.fabric.client.DialogueClientTest",
       "dev.kizuna.meridian.story.fabric.client.RebornClientTest",

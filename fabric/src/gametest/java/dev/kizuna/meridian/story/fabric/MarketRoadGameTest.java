@@ -8,6 +8,7 @@ import dev.kizuna.meridian.inventory.MobInventories;
 import dev.kizuna.meridian.story.protocol.pb.StoryMessages.RoadsideCase;
 import dev.kizuna.meridian.vanilla.fabric.VanillaDamageFabric;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -23,6 +24,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.phys.Vec3;
 
 public final class MarketRoadGameTest {
     private static final int LIMIT = 400;
@@ -36,6 +38,8 @@ public final class MarketRoadGameTest {
     private static final double HIT = 1.0;
     private static final long SEED = 20261127L;
     private static final int OFFER_COUNT = 3;
+    private static final int SELLER_POSE_INDEX = 13;
+    private static final int DISCIPLE_POSE_INDEX = 14;
 
     @GameTest(maxTicks = LIMIT)
     public void counterfeitSaleDeliversOnlyMarkedFakeAndPracticeIsExplicit(GameTestHelper test) {
@@ -101,6 +105,30 @@ public final class MarketRoadGameTest {
             f.owner.choose(f.owner.offers().getLast(), 1);
             test.assertTrue(f.scene.road().getLastEnding().equals("passed_stall")
                     && !ManualSeller.carries(f.owner.player(), c), "绕过摊子仍交付了卷");
+            f.owner.close();
+        }).thenSucceed();
+    }
+
+    @GameTest(maxTicks = LIMIT)
+    public void sellerFacesTheCounterAndOnlyLeansOrStandsAkimbo(GameTestHelper test) {
+        var f = new Fixture(test, ManualSeller.KIND, FAKE, SELLER_POSE_INDEX);
+        f.open().thenExecute(() -> {
+            var seller = f.actor();
+            var counter = MarketStall.counter(BlockPos.of(f.current().getSite()));
+            test.assertTrue(StoryPoseChecks.poses(seller).equals(Set.of(StoryPoses.LEAN_COUNTER, StoryPoses.AKIMBO)),
+                    "摊主不是靠柜台或叉腰，实际 " + StoryPoseChecks.poses(seller));
+            StoryPoseChecks.facing(test, seller, Vec3.atBottomCenterOf(counter));
+            f.owner.close();
+        }).thenSucceed();
+    }
+
+    @GameTest(maxTicks = LIMIT)
+    public void discipleOnlyWaitsWithArmsCrossed(GameTestHelper test) {
+        var f = new Fixture(test, FranticCultivator.KIND, FAKE, DISCIPLE_POSE_INDEX);
+        f.open().thenExecute(() -> {
+            var disciple = f.owner.player().level().getEntity(UUID.fromString(f.current().getDisciple()));
+            test.assertTrue(disciple != null && StoryPoseChecks.poses(disciple).equals(Set.of(StoryPoses.ARMS_CROSSED)),
+                    "同门不是只抱臂");
             f.owner.close();
         }).thenSucceed();
     }

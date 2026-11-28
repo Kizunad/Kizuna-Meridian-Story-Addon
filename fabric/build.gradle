@@ -165,7 +165,7 @@ loom {
             runDir 'build/clienttest'
             vmArg "-Dmeridian.story.scene=${providers.gradleProperty('storyScene').getOrElse('dialogue')}"
             vmArg "-Dmeridian.story.shots=${clientShots}"
-            if (providers.gradleProperty('storyScene').getOrElse('') == 'yunxi-anim') {
+            if (providers.gradleProperty('storyScene').getOrElse('') in ['yunxi-anim', 'npc-poses']) {
                 // 逐刻录制由客户端 GameTest 驱动，渲染和磁盘读回期间两端都不自行走时。
                 vmArg '-Dfabric.client.gametest'
                 vmArg '-Dfabric.client.gametest.modid=meridian_story_client_test'
